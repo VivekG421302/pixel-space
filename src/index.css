@@ -129,9 +129,9 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--acc);hei
 .gtabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
 /* themes: tokens only (grass colours are tinted per theme by the engine) */
-[data-theme=night]{--box:#262a35;--panel:#1b1e27;--ink:#e8ecf6;--line:#0b0d12;--edge:#4c5468}
 [data-theme=berry]{--box:#fff3f7;--panel:#ffffff;--ink:#4a2a3a;--line:#4a2a3a;--edge:#dcb0c2}
-[data-theme=night] .modal{background:rgba(4,6,10,.78)}
+[data-scheme=dark]{--box:#262a35;--panel:#1b1e27;--ink:#e8ecf6;--line:#0b0d12;--edge:#4c5468;color-scheme:dark}
+[data-scheme=dark] .modal{background:rgba(4,6,10,.78)}
 /* game-style menu */
 .menu{width:min(92vw,380px);max-height:min(88dvh,640px);display:flex;flex-direction:column;overflow:hidden}
 .mlist{display:flex;flex-direction:column;gap:8px;padding:14px 16px;overflow:auto}

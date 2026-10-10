@@ -14,8 +14,8 @@ export function initApp() {
   started = true;
   const $=s=>document.querySelector(s),LS=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
   const MODES={pomo:{n:'POMODORO',f:25,b:5,c:['#78c850','#68b840','#48a030']},r52:{n:'52/17',f:52,b:17,c:['#68b8e8','#58a8d8','#3878c8']},u90:{n:'90-MIN',f:90,b:20,c:['#a890d0','#9880c0','#6850a0']},tbx:{n:'TIMEBOX',f:60,b:10,c:['#f8a050','#e89040','#d06820']},cus:{n:'CUSTOM',f:30,b:10,c:['#b8b8a8','#a8a898','#707868']}};
-  const DK={play:' ',reset:'r',skip:'s',mode:'m',task:'n',tabs:'t',sound:'x',menu:',',garden:'g',banner:'b'};
-  let S=Object.assign({mode:'pomo',snd:true,vol:60,pet:'cat3',dur:{},tasks:[],custom:null,banner:'default',cover:null,kb:true,keys:{},theme:'leaf'},LS('focusquest')||{},{cover:LS('fq_cover'),custom:LS('fq_custom')});{const sk=S.keys||{};S.keys={...DK,...sk};if(!sk.menu&&sk.settings)S.keys.menu=sk.settings;delete S.keys.settings;delete S.keys.about}
+  const DK={play:' ',reset:'r',skip:'s',mode:'m',task:'n',tabs:'t',sound:'x',menu:',',garden:'g',banner:'b',dark:'d'};
+  let S=Object.assign({mode:'pomo',snd:true,vol:60,pet:'cat3',dur:{},tasks:[],custom:null,banner:'default',cover:null,kb:true,keys:{},theme:'leaf',scheme:'light'},LS('focusquest')||{},{cover:LS('fq_cover'),custom:LS('fq_custom')});{const sk=S.keys||{};S.keys={...DK,...sk};if(!sk.menu&&sk.settings)S.keys.menu=sk.settings;delete S.keys.settings;delete S.keys.about;if(S.theme==='night'){S.theme='leaf';S.scheme='dark'}}
   const save=()=>{const{cover,custom,...r}=S;SV('focusquest',r);SV('fq_custom',custom);return SV('fq_cover',cover)};
   const dur=m=>({f:S.dur[m]?.f??MODES[m].f,b:S.dur[m]?.b??MODES[m].b});
   let phase='focus',left=dur(S.mode).f*60,run=false,endAt=0,tick;
@@ -134,16 +134,23 @@ export function initApp() {
 
   /* ---- timer ---- */
   /* ---- themes (tokens live in index.css; grass colours are tinted here) ---- */
-  const THEMES={leaf:{n:'LEAF'},night:{n:'NIGHT',g:['#0b1510',.66],a:['#0b1510',.12]},berry:{n:'BERRY',g:['#ffb3cf',.5],a:['#d94c82',.55]}};
+  const THEMES={leaf:{n:'LEAF'},berry:{n:'BERRY',g:['#ffb3cf',.5],a:['#d94c82',.55]}};
+  const DARK={g:['#0b1510',.66],a:['#0b1510',.12]},SCHEMES={light:'LIGHT',dark:'DARK',auto:'AUTO'};
+  const sysDark=matchMedia('(prefers-color-scheme: dark)'),isDark=()=>S.scheme==='dark'||(S.scheme==='auto'&&sysDark.matches);
   const tint=(h,t)=>t?hexOf(rgbOf(h).map((v,i)=>v+(rgbOf(t[0])[i]-v)*t[1])):h;
-  function thUI(){const e=$('#ths');if(e)e.innerHTML=Object.entries(THEMES).map(([k,t])=>`<button class="gb sm ${S.theme===k?'on':''}" data-th="${k}">${t.n}</button>`).join('');const n=$('#mthn');if(n)n.textContent=(THEMES[S.theme]||THEMES.leaf).n}
+  function thUI(){const e=$('#ths');if(e)e.innerHTML=Object.entries(THEMES).map(([k,t])=>`<button class="gb sm ${S.theme===k?'on':''}" data-th="${k}">${t.n}</button>`).join('');const n=$('#mthn');if(n)n.textContent=(THEMES[S.theme]||THEMES.leaf).n;
+   const d=$('#dks');if(d)d.innerHTML=Object.entries(SCHEMES).map(([k,l])=>`<button class="gb sm ${S.scheme===k?'on':''}" data-sc="${k}">${l}</button>`).join('');const m=$('#mdkn');if(m)m.textContent=SCHEMES[S.scheme]||'LIGHT'}
   function thSet(k){if(!THEMES[k])return;S.theme=k;save();ui();thUI()}
+  function schSet(k){if(!SCHEMES[k])return;S.scheme=k;save();ui();thUI()}
+  const schemeNext=()=>{const ks=Object.keys(SCHEMES);schSet(ks[(ks.indexOf(S.scheme)+1)%ks.length])};
+  $('#dks').onclick=e=>{const b=e.target.closest('[data-sc]');if(b){click();schSet(b.dataset.sc)}};
+  sysDark.addEventListener&&sysDark.addEventListener('change',()=>{if(S.scheme==='auto')ui()});
   const themeNext=()=>{const ks=Object.keys(THEMES);thSet(ks[(ks.indexOf(S.theme)+1)%ks.length])};
   $('#ths').onclick=e=>{const b=e.target.closest('[data-th]');if(b){click();thSet(b.dataset.th)}};
   const Q={focusfalse:['A wild {m} session appeared! Press A to start.','Ready when you are, trainer.','Your buddy is stretching. Start the timer!','Pick a mission, then press A.'],focustrue:['Deep focus protocol active!','Keep going, trainer!','Your buddy is cheering you on.','Quiet mind, steady progress.'],breakfalse:['Break is ready. Press A to rest.','Time to recharge. Press A.','You earned this one.'],breaktrue:['Break time! Your buddy is napping.','Stretch, sip some water, breathe.','Rest up. The next round is coming.']};
   let qk='',qt='';function quip(k,m){if(k!==qk){qk=k;const a=Q[k];qt=a[0|Math.random()*a.length].replace('{m}',m.n)}return qt}
   function ui(){const m=MODES[S.mode],r=document.documentElement.style;
-   const th=THEMES[S.theme]||THEMES.leaf;document.documentElement.dataset.theme=S.theme;r.setProperty('--g1',tint(m.c[0],th.g));r.setProperty('--g2',tint(m.c[1],th.g));r.setProperty('--acc',tint(m.c[2],th.a));
+   const th=THEMES[S.theme]||THEMES.leaf,dk=isDark(),dg=dk&&DARK.g,da=dk&&DARK.a;document.documentElement.dataset.theme=THEMES[S.theme]?S.theme:'leaf';document.documentElement.dataset.scheme=dk?'dark':'light';r.setProperty('--g1',tint(tint(m.c[0],th.g),dg));r.setProperty('--g2',tint(tint(m.c[1],th.g),dg));r.setProperty('--acc',tint(tint(m.c[2],th.a),da));
    const s=Math.max(0,Math.ceil(left)),mm=String(Math.floor(s/60)).padStart(2,'0'),ss=String(s%60).padStart(2,'0');$('#mm').textContent=mm;$('#ss').textContent=ss;$('#mm').style.fontSize=mm.length>2?'calc(var(--w)*.29)':'';$('#clock').classList.toggle('run',run);document.title=mm+':'+ss+' · Focus Quest';
    const pc=Math.max(0,Math.min(100,left/total()*100));$('#hpb').style.width=pc+'%';$('#hpb').style.background=pc>50?'#48d848':pc>20?'#f8d030':'#f85838';$('#hpl').textContent=phase==='focus'?'HP':'ZZZ';$('#badge').textContent=phase==='focus'?'FOCUS':'REST';
    say(quip(phase+run,m));
@@ -209,14 +216,14 @@ export function initApp() {
   const mnItems=()=>[...document.querySelectorAll('#mlist .mi')];let mnI=0;
   const mnSet=i=>{const a=mnItems();mnI=(i+a.length)%a.length;a.forEach((b,n)=>b.classList.toggle('on',n===mnI))};
   $('#mlist').addEventListener('mouseover',e=>{const b=e.target.closest('.mi');if(b)mnSet(mnItems().indexOf(b))});
-  $('#mlist').addEventListener('click',e=>{const b=e.target.closest('.mi');if(!b)return;if(b.id==='mth'){click();themeNext();return}open('#mnu',0);const go=b.dataset.go;if(go)$(go).click()});
+  $('#mlist').addEventListener('click',e=>{const b=e.target.closest('.mi');if(!b)return;if(b.id==='mth'){click();themeNext();return}if(b.id==='mdk'){click();schemeNext();return}open('#mnu',0);const go=b.dataset.go;if(go)$(go).click()});
   $('#bm').onclick=()=>{click();mnSet(0);thUI();open('#mnu',1)};
   addEventListener('keydown',e=>{if(!$('#mnu').classList.contains('open'))return;
    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();click();mnSet(mnI+(e.key==='ArrowDown'?1:-1))}
    else if(e.key==='Enter'){e.preventDefault();mnItems()[mnI]?.click()}
    else if(S.kb&&e.key===S.keys.menu&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.repeat){e.preventDefault();e.stopImmediatePropagation();open('#mnu',0)}});
-  const ACT={play:'Start / pause',reset:'Reset',skip:'Skip phase',mode:'Next timer mode',task:'New mission',tabs:'Tasks / history',sound:'Toggle sound',menu:'Open menu',garden:'Open garden',banner:'Banner library'};
-  const ACTS={play:()=>$('#play').click(),reset:()=>$('#reset').click(),skip:()=>$('#skip').click(),menu:()=>$('#bm').click(),garden:()=>$('#bg').click(),banner:()=>$('#cvc').click(),
+  const ACT={play:'Start / pause',reset:'Reset',skip:'Skip phase',mode:'Next timer mode',task:'New mission',tabs:'Tasks / history',sound:'Toggle sound',menu:'Open menu',garden:'Open garden',banner:'Banner library',dark:'Toggle dark mode'};
+  const ACTS={play:()=>$('#play').click(),reset:()=>$('#reset').click(),skip:()=>$('#skip').click(),menu:()=>$('#bm').click(),garden:()=>$('#bg').click(),banner:()=>$('#cvc').click(),dark:()=>{click();schSet(isDark()?'light':'dark')},
    mode:()=>{const ks=Object.keys(MODES);S.mode=ks[(ks.indexOf(S.mode)+1)%ks.length];click();save();reset()},
    task:()=>{tabs(1);$('#ti').focus()},tabs:()=>tabs($('#his').classList.contains('hidden')?2:1),sound:()=>{S.snd=!S.snd;save();click()}};
   const kn=k=>k===' '?'SPACE':k.toUpperCase();let binding=null;

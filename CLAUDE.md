@@ -43,8 +43,11 @@ The engine and the JSX must agree. When you rename or remove an element, search 
 - `src/index.css`: design tokens in `:root` (`--g1`, `--g2`, `--acc`, `--box`, `--panel`, `--ink`, `--line`,
   `--edge`, `--bd`, `--r`), then component styles, then the Tailwind layers at the end (this order matches the
   original page; utilities win ties).
-- Themes are `[data-theme=...]` token overrides (`leaf` default, `night`, `berry`). The engine sets
-  `document.documentElement.dataset.theme` and tints the grass colours per timer mode in `ui()`.
+- Two independent switches on `<html>`: `data-theme` (`leaf` default, `berry`; colour theme) and `data-scheme`
+  (`light` / `dark`; dark mode, with a user setting of light / dark / auto). Both are token overrides in `index.css`.
+  The engine sets them in `ui()` and tints the grass colours per timer mode. `index.html` has a tiny inline script that
+  applies the saved values before first paint; keep it in sync with the engine's storage shape (`focusquest.theme`,
+  `focusquest.scheme`).
 - Use `var(--line)` for borders and hard shadows, `var(--ink)` for text, `var(--panel)` for input/inner
   backgrounds. Do not hard-code `#fff`/`#383838` in new rules.
 - The look is flat pixel art: no gradients, no blur, no soft shadows. Font: Press Start 2P.

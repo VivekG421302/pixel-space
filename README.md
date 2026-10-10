@@ -23,12 +23,15 @@ a single-page rewrite, and long-lived caching for built assets. No environment v
 ### Menu
 Press **MENU** (or `,`) for a game-style pop-up in the middle of the screen. Move with the mouse or
 `↑` `↓`, choose with `Enter`, close with `Esc`. It opens Settings, About, Banners, the Tile Manager,
-the sprite-sheet importer, the Pixel Creator, the Garden, and switches the theme.
+the sprite-sheet importer, the Pixel Creator, the Garden, and switches dark mode and the colour theme.
 
-### Themes
-Three themes: **Leaf** (default), **Night** (dark) and **Berry** (soft pink). Switch from the menu
-(THEME item) or Settings → Theme. The choice is remembered. Each timer mode still has its own colour
-palette; the theme tints it.
+### Dark mode and themes
+- **Dark mode** has three settings: **Light** (default), **Dark** and **Auto** (follows your device).
+  Switch it from the menu (DARK MODE item), Settings → Dark Mode, or press `D` to flip between light and dark.
+- **Colour themes**: **Leaf** (default green) and **Berry** (soft pink). Pick one in the menu (THEME item)
+  or Settings → Colour Theme. Dark mode works with either theme.
+- Each timer mode keeps its own colour palette; the theme and dark mode tint it. Your choices are remembered
+  and applied before the page paints, so there is no flash.
 
 ### Focus timer
 Pick a mode from the drop-down on the clock face:
@@ -124,6 +127,7 @@ while a pop-up is open.
 | Toggle sound | `X` |
 | Open menu | `,` |
 | Open garden | `G` |
+| Toggle dark mode | `D` |
 | Banner library | `B` |
 
 Inside the Pixel Creator: `P` pencil, `E` eraser, `F` fill, `I` pick, `L` line, `R` rect, `M` move
