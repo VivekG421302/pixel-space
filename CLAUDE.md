@@ -36,6 +36,9 @@ The engine and the JSX must agree. When you rename or remove an element, search 
 - Menu items: `.mi`; `data-go="#id"` forwards the click to another control.
 - Layer rows in the pixel creator use `data-ly`; tools use `data-px`; garden tools `data-tool`, tabs `data-cat`.
 
+- **Never return a falsy value from a DOM0 handler** (`el.onkeydown = e => cond && fn()`): returning `false` cancels
+  the event, which silently blocked typing in the task input once. Use a block body: `e => { if (cond) fn(); }`.
+
 ## Styling
 - `src/index.css`: design tokens in `:root` (`--g1`, `--g2`, `--acc`, `--box`, `--panel`, `--ink`, `--line`,
   `--edge`, `--bd`, `--r`), then component styles, then the Tailwind layers at the end (this order matches the

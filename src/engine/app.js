@@ -178,7 +178,7 @@ export function initApp() {
    const g={};S.tasks.filter(t=>t.done).sort((x,y)=>y.at-x.at).forEach(t=>{const d=new Date(t.at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});(g[d]=g[d]||[]).push(t)});
    $('#his').innerHTML=Object.keys(g).length?Object.entries(g).map(([d,l])=>`<h4 class="mt-3 mb-1" style="color:var(--acc)">${d}</h4><ul class="space-y-2">${l.map(t=>`<li class="flex gap-2 items-center"><span class="chk d">✓</span><span class="opacity-70 line-through">${esc(t.text)}</span></li>`).join('')}</ul>`).join(''):'<p class="opacity-70">Cleared missions show up here by date.</p>'}
   function add(){const v=$('#ti').value.trim();if(!v)return;click();S.tasks.push({id:Date.now()+Math.random(),text:v,done:false});$('#ti').value='';save();tasks()}
-  $('#ta').onclick=add;$('#ti').onkeydown=e=>e.key==='Enter'&&add();
+  $('#ta').onclick=add;$('#ti').onkeydown=e=>{if(e.key==='Enter')add()};
   $('#tl').onclick=e=>{const c=e.target.closest('[data-id]'),d=e.target.closest('[data-del]');
    if(c){const r=c.getBoundingClientRect(),t=S.tasks.find(t=>t.id==c.dataset.id);t.done=true;t.at=Date.now();check();react('task',r.left+r.width/2);save();tasks()}
    if(d){click();S.tasks=S.tasks.filter(t=>t.id!=d.dataset.del);save();tasks()}};
