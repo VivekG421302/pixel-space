@@ -29,6 +29,8 @@ function SettingsModal() {
           <div id="keys"></div>
           <p className="text-[8px] opacity-70 my-2">Click a key, then press the new one. Shortcuts pause while you type in a text field.</p>
           <button className="gb sm" id="kbr">RESET KEYS</button>
+          <h3>THEME</h3>
+          <div className="cbar" id="ths"></div>
           <h3>BANNER</h3>
           <div className="row">
             <span>Cover image</span>

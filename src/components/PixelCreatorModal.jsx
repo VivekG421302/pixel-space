@@ -30,6 +30,22 @@ function PixelCreatorModal() {
             </div>
           </div>
           <div className="pxside">
+            <div className="pxsec">LAYERS</div>
+            <div className="lyrs">
+              <div className="lyr" data-ly="ref" role="button" tabIndex={0} aria-label="Layer 1, reference image">
+                <span className="lyn">1</span>
+                <svg className="lyi" viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><rect x="1" y="2" width="14" height="12" fill="none" stroke="currentColor" strokeWidth="2" /><rect x="10" y="5" width="2" height="2" fill="currentColor" /><path d="M3 12 L6 8 L8 10 L10 8 L13 12 Z" fill="currentColor" /></svg>
+                <span className="lyt"><b>REFERENCE</b><small id="lyrs">IMAGE · none</small></span>
+                <button className="gb sm lye" id="lyre" aria-label="Show or hide the reference layer" title="Show / hide"><svg viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M1 8 L4 4 H12 L15 8 L12 12 H4 Z" fill="none" stroke="currentColor" strokeWidth="2" /><rect className="ep" x="7" y="6" width="3" height="4" fill="currentColor" /><path className="es" d="M2 14 L14 2" stroke="currentColor" strokeWidth="2" /></svg></button>
+              </div>
+              <div className="lyr on" data-ly="draw" role="button" tabIndex={0} aria-label="Layer 2, drawing">
+                <span className="lyn">2</span>
+                <svg className="lyi" viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M11 1 L15 5 L5 15 L1 15 L1 11 Z" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M9 3 L13 7" stroke="currentColor" strokeWidth="2" /></svg>
+                <span className="lyt"><b>DRAWING</b><small>PIXELS</small></span>
+                <button className="gb sm lye" id="lyde" aria-label="Show or hide the drawing layer" title="Show / hide"><svg viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M1 8 L4 4 H12 L15 8 L12 12 H4 Z" fill="none" stroke="currentColor" strokeWidth="2" /><rect className="ep" x="7" y="6" width="3" height="4" fill="currentColor" /><path className="es" d="M2 14 L14 2" stroke="currentColor" strokeWidth="2" /></svg></button>
+              </div>
+            </div>
+            <p className="text-[8px] opacity-70 mt-2">Layer 1 sits under layer 2. Click a layer to work on it. Only layer 2 is saved as the tile.</p>
             <div className="pxsec">CANVAS SIZE</div>
             <div className="cbar" id="pxs">
               <button className="gb sm" data-s="8">8</button>
@@ -62,7 +78,6 @@ function PixelCreatorModal() {
             <div className="cbar">
               <button className="gb sm on" id="pxrl">LOAD</button>
               <button className="gb sm" id="pxrfit">FIT</button>
-              <button className="gb sm on" id="pxrv">SHOW</button>
               <button className="gb sm" id="pxrx">REMOVE</button>
             </div>
             <label className="fld" style={{marginTop: '8px'}}>

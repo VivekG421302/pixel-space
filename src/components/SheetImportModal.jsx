@@ -14,14 +14,18 @@ function SheetImportModal() {
             Sprite sheet image
             <input type="file" id="slf" accept="image/*" />
           </label>
-          <div className="fld">Grid size (px per tile)</div>
+          <div className="fld">Tile size in pixels (width x height)</div>
           <div className="gsz" id="slg">
             <button className="gb sm" data-g="16">16</button>
             <button className="gb sm on" data-g="32">32</button>
             <button className="gb sm" data-g="64">64</button>
             <button className="gb sm" data-g="128">128</button>
             <button className="gb sm" data-g="256">256</button>
-            <input id="slc" type="number" min="4" max="512" placeholder="custom" style={{width: '96px'}} aria-label="Custom grid size" />
+            <span className="text-[8px]">W</span>
+            <input id="slw" type="number" min="1" max="1024" defaultValue="32" style={{width: '84px'}} aria-label="Tile width in pixels" />
+            <span className="text-[8px]">H</span>
+            <input id="slh" type="number" min="1" max="1024" defaultValue="32" style={{width: '84px'}} aria-label="Tile height in pixels" />
+            <button className="gb sm" id="slap">SET</button>
           </div>
           <div className="cbar" style={{marginBottom: '12px'}}>
             <button className="gb sm on" id="slsk">SKIP EMPTY: ON</button>

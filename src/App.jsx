@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import Dashboard from './components/Dashboard';
 import Buddy from './components/Buddy';
 import HiddenInputs from './components/HiddenInputs';
+import MenuModal from './components/MenuModal';
 import SettingsModal from './components/SettingsModal';
 import AboutModal from './components/AboutModal';
 import BannerModal from './components/BannerModal';
@@ -21,6 +22,7 @@ export default function App() {
     <>
       <Dashboard />
       <Buddy />
+      <MenuModal />
       <SettingsModal />
       <AboutModal />
       <BannerModal />

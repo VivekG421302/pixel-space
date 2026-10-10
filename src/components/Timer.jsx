@@ -41,9 +41,8 @@ function Timer() {
         </div>
       </div>
       <div className="dock">
-        <button className="gb" id="bs">SETTINGS</button>
+        <button className="gb" id="bm">MENU</button>
         <button className="gb" id="bg">GARDEN</button>
-        <button className="gb" id="ba">ABOUT</button>
       </div>
     </section>
   );
