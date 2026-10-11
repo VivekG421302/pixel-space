@@ -262,7 +262,7 @@ function AccountView({ auth }) {
         <div className="acctinfo">
           <b>{user.name}</b>
           <small>{user.email}</small>
-          <small className="prov">{user.provider && user.provider !== 'local' ? `SIGNED IN WITH ${String(user.provider).toUpperCase()}` : 'EMAIL ACCOUNT'}</small>
+          <small className="prov">{user.provider && String(user.provider).toLowerCase() !== 'local' ? `SIGNED IN WITH ${String(user.provider).toUpperCase()}` : 'EMAIL ACCOUNT'}</small>
         </div>
       </div>
       <p className="aguest">Progress sync across devices is coming next. For now your garden, tasks and settings stay on this device.</p>

@@ -6,6 +6,7 @@ import SHEET from '../assets/cats.png';
 import SAGA from '../assets/saga.png';
 import ATLAS from '../assets/atlas.png';
 import { META } from '../data/atlasMeta.js';
+import { BUILTIN_TS, SPRITE_TYPES, gardenDto, imageDataToMatrix, spriteDto, taskDto, userDto } from '../data/dto.js';
 
 let started = false;
 
@@ -187,7 +188,7 @@ export function initApp() {
   function add(){const v=$('#ti').value.trim();if(!v)return;click();S.tasks.push({id:Date.now()+Math.random(),text:v,done:false});$('#ti').value='';save();tasks()}
   $('#ta').onclick=add;$('#ti').onkeydown=e=>{if(e.key==='Enter')add()};
   $('#tl').onclick=e=>{const c=e.target.closest('[data-id]'),d=e.target.closest('[data-del]');
-   if(c){const r=c.getBoundingClientRect(),t=S.tasks.find(t=>t.id==c.dataset.id);t.done=true;t.at=Date.now();check();react('task',r.left+r.width/2);save();tasks()}
+   if(c){const r=c.getBoundingClientRect(),t=S.tasks.find(t=>t.id==c.dataset.id);t.done=true;t.at=t.u=Date.now();check();react('task',r.left+r.width/2);save();tasks()}
    if(d){click();S.tasks=S.tasks.filter(t=>t.id!=d.dataset.del);save();tasks()}};
   function tabs(n){click();$('#act').classList.toggle('hidden',n!=1);$('#his').classList.toggle('hidden',n!=2);$('#t1').classList.toggle('on',n==1);$('#t2').classList.toggle('on',n==2)}
   $('#t1').onclick=()=>tabs(1);$('#t2').onclick=()=>tabs(2);
@@ -284,7 +285,8 @@ export function initApp() {
   for(const[k,a]of[...G.cells]){const n=a.filter(x=>typeof x!=='number'||x<META.length);if(n.length!==a.length){if(n.length)G.cells.set(k,n);else G.cells.delete(k)}}
   const cats=()=>{const s=['GROUND','PROPS','NATURE'];CT.forEach(t=>{if(!s.includes(t.cat))s.push(t.cat)});return s};
   document.documentElement.style.setProperty('--atl',`url(${ATLAS})`);
-  let gsT,gq=false;const gsave=()=>{clearTimeout(gsT);gsT=setTimeout(()=>SV('fq_garden',[...G.cells].map(([k,a])=>[k,...a])),400)};
+  let gsT,gq=false;const GM=Object.assign({created:null,updated:null},LS('fq_garden_meta')||{});
+  const gsave=()=>{clearTimeout(gsT);const now=Date.now();GM.updated=now;if(!GM.created)GM.created=now;gsT=setTimeout(()=>{SV('fq_garden',[...G.cells].map(([k,a])=>[k,...a]));SV('fq_garden_meta',GM);dtoChanged('garden changed')},400)};
   const gcv=$('#gc'),gx=gcv.getContext('2d'),gd=()=>{if(!gq){gq=true;requestAnimationFrame(gdraw)}};
   AI.onload=gd;AI.src=ATLAS;
   function gplace(c,r,id){const k=r*GW+c;let a=G.cells.get(k);if(!a){a=[];G.cells.set(k,a)}if(a[a.length-1]===id)return false;if(a.length<2)a.push(id);else a[1]=id;return true}
@@ -331,11 +333,14 @@ export function initApp() {
   /* ---- custom tiles: stored in IndexedDB, editable in the Tile Manager ---- */
   const cb=c=>new Promise(r=>c.toBlob(r,'image/png')),mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
   const loadImg=f=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=URL.createObjectURL(f)});
-  const ctPut=it=>idb('readwrite',s=>s.put({id:it.id,name:it.name,cat:it.cat,mode:it.mode,blob:it.blob,w:it.w,h:it.h,order:it.order}),'tiles');
-  function ctAdopt(r){const url=URL.createObjectURL(r.blob),img=new Image();img.onload=()=>{gd();tmUI()};img.src=url;const it={id:r.id,name:r.name,cat:r.cat,mode:r.mode,w:r.w,h:r.h,order:r.order,blob:r.blob,url,img};CT.push(it);CTM.set(r.id,it);return it}
-  async function ctNew(cv,name,cat,mode){const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),blob=await cb(cv),order=CT.reduce((m,t)=>Math.max(m,t.order||0),0)+1,it=ctAdopt({id,name,cat,mode,blob,w:cv.width,h:cv.height,order});await ctPut(it);return it}
-  async function ctLoad(){const rows=await idb('readonly',s=>s.getAll(),'tiles');(rows||[]).sort((a,b)=>a.order-b.order).forEach(ctAdopt);tmUI();gpal();gd()}
-  const TM={sel:null,crop:null},tcur=()=>CTM.get(TM.sel),tmsg=t=>$('#tmmsg').textContent=t,upCat=v=>(v||'CUSTOM').toUpperCase().trim().slice(0,14)||'CUSTOM';
+  const ctPut=(it,touch=true)=>{if(touch)it.updated=Date.now();return idb('readwrite',s=>s.put({id:it.id,sid:it.sid,name:it.name,cat:it.cat,mode:it.mode,blob:it.blob,w:it.w,h:it.h,order:it.order,created:it.created,updated:it.updated}),'tiles').then(r=>{dtoChanged('sprites changed');return r})};
+  const nextSid=()=>{let n=Math.max(1000,+localStorage.getItem('fq_sid_seq')||0,...CT.map(x=>x.sid||0))+1;try{localStorage.setItem('fq_sid_seq',String(n))}catch(e){}return n};
+  function ctAdopt(r){const url=URL.createObjectURL(r.blob),img=new Image();img.onload=()=>{gd();tmUI()};img.src=url;const it={id:r.id,sid:r.sid,name:r.name,cat:r.cat,mode:r.mode,w:r.w,h:r.h,order:r.order,blob:r.blob,url,img,created:r.created,updated:r.updated};CT.push(it);CTM.set(r.id,it);
+   if(!it.sid||!it.created){it.sid=it.sid||nextSid();it.created=it.created||Date.now();it.updated=it.updated||it.created;ctPut(it,false)}return it}
+  async function ctNew(cv,name,cat,mode){const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),blob=await cb(cv),order=CT.reduce((m,t)=>Math.max(m,t.order||0),0)+1,it=ctAdopt({id,sid:nextSid(),name,cat,mode,blob,w:cv.width,h:cv.height,order,created:Date.now(),updated:Date.now()});await ctPut(it,false);return it}
+  async function ctLoad(){const rows=await idb('readonly',s=>s.getAll(),'tiles');(rows||[]).sort((a,b)=>a.order-b.order).forEach(ctAdopt);tmUI();gpal();gd();
+   await Promise.all(CT.map(it=>it.img.complete?1:new Promise(r=>{it.img.addEventListener('load',r,{once:true});it.img.addEventListener('error',r,{once:true})})));dtoReady=true;dtoPrint('page load')}
+  const TM={sel:null,crop:null},tcur=()=>CTM.get(TM.sel),tmsg=t=>$('#tmmsg').textContent=t,upCat=v=>(v||'CUSTOMS').toUpperCase().trim().slice(0,14)||'CUSTOMS';
   function tmUI(){const g=$('#tmg');$('#tcats').innerHTML=cats().map(c=>`<option value="${esc(c)}">`).join('');
    if(!CT.length){g.innerHTML='<p class="opacity-70">No custom tiles yet. Upload tiles or import a sprite sheet.</p>';$('#tme').style.display='none';return}
    const gr={};CT.forEach(t=>(gr[t.cat]=gr[t.cat]||[]).push(t));
@@ -357,7 +362,7 @@ export function initApp() {
   $('#tcat').onchange=e=>{const it=tcur();if(!it)return;it.cat=upCat(e.target.value);ctPut(it);tmUI();gpal()};
   $('#tmo').onchange=e=>{const it=tcur();if(it){it.mode=e.target.value;ctPut(it);gd()}};
   $('#tmg').onclick=e=>{const b=e.target.closest('[data-t]');if(b){click();TM.sel=b.dataset.t;TM.crop=null;tmUI()}};
-  function tmv(d){const it=tcur();if(!it)return;click();const i=CT.indexOf(it);let j=i+d;while(j>=0&&j<CT.length&&CT[j].cat!==it.cat)j+=d;if(j<0||j>=CT.length)return;[CT[i],CT[j]]=[CT[j],CT[i]];CT.forEach((t,n)=>{if(t.order!==n+1){t.order=n+1;ctPut(t)}});tmUI();gpal()}
+  function tmv(d){const it=tcur();if(!it)return;click();const i=CT.indexOf(it);let j=i+d;while(j>=0&&j<CT.length&&CT[j].cat!==it.cat)j+=d;if(j<0||j>=CT.length)return;[CT[i],CT[j]]=[CT[j],CT[i]];CT.forEach((t,n)=>{if(t.order!==n+1){t.order=n+1;ctPut(t,false)}});tmUI();gpal()}
   $('#tml').onclick=()=>tmv(-1);$('#tmr').onclick=()=>tmv(1);
   $('#tdl').onclick=()=>{const it=tcur();if(!it||!confirm('Delete this tile and remove it from the garden?'))return;click();CT.splice(CT.indexOf(it),1);CTM.delete(it.id);URL.revokeObjectURL(it.url);idb('readwrite',s=>s.delete(it.id),'tiles');
    for(const[k,a]of[...G.cells]){const n=a.filter(x=>x!==it.id);if(n.length!==a.length){if(n.length)G.cells.set(k,n);else G.cells.delete(k)}}gsave();if(G.sel===it.id)G.sel=-1;TM.sel=null;tmUI();gpal();gd()};
@@ -367,7 +372,7 @@ export function initApp() {
   tec.addEventListener('pointermove',e=>{if(!tcs)return;const p=tpos(e);TM.crop={x:Math.min(tcs[0],p[0]),y:Math.min(tcs[1],p[1]),w:Math.abs(p[0]-tcs[0]),h:Math.abs(p[1]-tcs[1])};tdraw()});
   tec.addEventListener('pointerup',()=>{tcs=null;if(TM.crop&&(TM.crop.w<1||TM.crop.h<1))TM.crop=null;tdraw()});
   $('#tupb').onclick=()=>{click();$('#tupf').click()};
-  $('#tupf').onchange=async e=>{let n=0;for(const f of e.target.files){if(!f.type.startsWith('image/'))continue;const im=await loadImg(f),c=mk(im.width,im.height);c.getContext('2d').drawImage(im,0,0);const it=await ctNew(c,f.name.replace(/\.[^.]+$/,'').slice(0,24),'CUSTOM',im.width%16===0&&im.height%16===0?'p':'o');TM.sel=it.id;n++}e.target.value='';tmsg(n?`Added ${n} tile${n>1?'s':''}. Select one to edit it.`:'Please choose image files.');tmUI();gpal();gd()};
+  $('#tupf').onchange=async e=>{let n=0;for(const f of e.target.files){if(!f.type.startsWith('image/'))continue;const im=await loadImg(f),c=mk(im.width,im.height);c.getContext('2d').drawImage(im,0,0);const it=await ctNew(c,f.name.replace(/\.[^.]+$/,'').slice(0,24),'CUSTOMS',im.width%16===0&&im.height%16===0?'p':'o');TM.sel=it.id;n++}e.target.value='';tmsg(n?`Added ${n} tile${n>1?'s':''}. Select one to edit it.`:'Please choose image files.');tmUI();gpal();gd()};
   $('#btm').onclick=$('#gtm').onclick=()=>{click();tmUI();open('#mt',1)};
 
   /* ---- sprite sheet slicer: 16 / 32 / 64 / 128 / 256 or custom grids ---- */
@@ -503,5 +508,25 @@ export function initApp() {
   new ResizeObserver(()=>{const v=$('#gview');gcv.width=v.clientWidth;gcv.height=v.clientHeight;gd()}).observe($('#gview'));
   $('#bg').onclick=()=>{click();$('#gzl').textContent=G.z+'x';open('#mg',1);toolUI();gpal();gd()};
   addEventListener('keydown',e=>{if($('#mg').classList.contains('open')&&e.key===' '&&!typing(e.target)){G.space=true;e.preventDefault()}});addEventListener('keyup',e=>{if(e.key===' ')G.space=false});
+  /* ---- backend DTOs: the same data in the shapes documented in README "Backend API reference" ---- */
+  // Sprites (built-in ids 1..N, custom ids from 1001), the 2-layer garden grid, tasks and the signed-in user are rebuilt
+  // from the live state on demand and printed to the console on every page load. Nothing here is sent anywhere yet.
+  let authUser=null,dtoReady=false,dtT;const BOOT=Date.now(),uid=()=>authUser?authUser.id??null:null;
+  const sidOf=id=>typeof id==='number'?id+1:(CTM.get(id)?.sid||0);
+  function pxMatrix(src,x,y,w,h){const c=mk(w,h),cx=c.getContext('2d',{willReadFrequently:true});cx.drawImage(src,x,y,w,h,0,0,w,h);return imageDataToMatrix(cx.getImageData(0,0,w,h))}
+  function builtinSprites(){if(!AI.complete)return [];const n={};return BI.map(it=>{n[it.cat]=(n[it.cat]||0)+1;return spriteDto({id:it.id+1,clientId:'builtin-'+(it.id+1),name:`${it.cat} ${n[it.cat]}`,category:it.cat,type:SPRITE_TYPES[it.mode],data:pxMatrix(AI,it.x,it.y,it.w,it.h),user:null,created:BUILTIN_TS,updated:BUILTIN_TS,system:true})})}
+  function customSprites(){return CT.filter(it=>it.img&&it.img.complete).map(it=>spriteDto({id:it.sid,clientId:it.id,name:it.name,category:it.cat,type:SPRITE_TYPES[it.mode],data:pxMatrix(it.img,0,0,it.w,it.h),user:uid(),created:it.created,updated:it.updated}))}
+  function gardenData(){const l1=[],l2=[];for(let r=0;r<GH;r++){const a=new Array(GW).fill(0),b=new Array(GW).fill(0);for(let c=0;c<GW;c++){const cell=G.cells.get(r*GW+c);if(cell){a[c]=sidOf(cell[0])||0;if(cell.length>1)b[c]=sidOf(cell[1])||0}}l1.push(a);l2.push(b)}
+   return gardenDto({layer1:l1,layer2:l2,sizeX:GW,sizeY:GH,tileSize:TS,user:uid(),created:GM.created||GM.updated||BOOT,updated:GM.updated||GM.created||BOOT})}
+  const dto={user:()=>userDto(authUser),tasks:()=>S.tasks.map((x,i)=>taskDto(x,i,uid())),sprites:o=>[...(o&&o.builtin?builtinSprites():[]),...customSprites()],garden:gardenData,
+   all:o=>({user:dto.user(),tasks:dto.tasks(),sprites:dto.sprites(o),garden:dto.garden()})};
+  function dtoPrint(why){const d=dto.all(),f=m=>m.flat().filter(Boolean).length;
+   console.groupCollapsed(`%c[Pixel Space] backend DTOs · ${why}`,'color:#48a030;font-weight:bold');
+   console.log('user',d.user);console.log(`tasks (${d.tasks.length})`,d.tasks);console.log(`sprites (${d.sprites.length} custom)`,d.sprites);
+   console.log(`garden ${GW}x${GH} · layer-1 cells: ${f(d.garden['layer-1'])} · layer-2 cells: ${f(d.garden['layer-2'])}`,d.garden);
+   console.info(`Built-in sprites are ids 1..${BI.length} (docs/seed/builtin-sprites.json). Helpers: fq.dto.all({builtin:true}), fq.dto.garden(), fq.dto.sprites(), fq.dto.tasks(), fq.dto.user()`);console.groupEnd()}
+  function dtoChanged(why){if(!dtoReady||localStorage.getItem('fq_debug_dto')!=='1')return;clearTimeout(dtT);dtT=setTimeout(()=>dtoPrint(why),500)}
+  addEventListener('fq:auth-changed',e=>{authUser=e.detail.user||null;if(dtoReady&&e.detail.status!=='checking')dtoPrint('auth '+e.detail.status)});
+  window.fq={dto,print:()=>dtoPrint('manual'),dtoVersion:1};
   cal();tasks();reset();size();keysUI();cover();bnLoad();gpal();ctLoad();layerUI();thUI();requestAnimationFrame(frame);
 }

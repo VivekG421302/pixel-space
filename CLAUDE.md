@@ -52,8 +52,19 @@ Unlike the rest of the UI, auth is a **real React feature** in `src/auth/` (stat
 - `AccountMenuItem.jsx`: the **last** item in the game menu (keeps a constant `className="mi"` so the menu cursor works).
 - The app is **guest-first**; never block gameplay on auth. Keep error text generic for credentials and for
   forgot-password (no account enumeration).
-- Backend contract: `docs/AUTH_API.md`. Local mock: `npm run mock:api` (needs `npm run dev` or `npm run preview`, both proxy `/api`).
+- Backend contract: README "Backend API reference" and `docs/AUTH_API.md` (`{{Base Url}}` = backend origin + `/api/v1`). Local mock: `npm run mock:api` (needs `npm run dev` or `npm run preview`, both proxy `/api`).
 - For future sync code, call `authFetch()` from `src/auth/api.js` (or `useAuth().authFetch`); do not read tokens elsewhere.
+
+## Backend DTOs (keep these in sync)
+The README "Backend API reference" is the contract with the Spring Boot backend. The engine rebuilds the DTOs from live state
+(`fq.dto.*` in the console, logged on every page load): `src/data/dto.js` has the pure builders, and the "backend DTOs"
+section at the end of `engine/app.js` wires them to the state.
+- Sprites: every tile (Pixel Creator, upload, sprite-sheet slice, edits) is a custom sprite with a numeric `sid` (from 1001),
+  `created` / `updated` stamps, and a category (default `CUSTOMS`). Built-ins are ids `index + 1` (1 to 80).
+- Garden: `G.cells` (cell key -> up to two ids) maps to the `layer-1` / `layer-2` 256 x 128 grids; timestamps live in `fq_garden_meta`.
+- Tasks: `S.tasks` maps to the Task DTO (`id` doubles as creation time; `at` is the completion time).
+- If you add a field or a feature that changes sprites, the garden, tasks or users, update the builders, the README tables and the
+  seed file (`npm run export:builtin`) in the same change. Never send a client-supplied `user` to the server.
 
 ## Styling
 - `src/index.css`: design tokens in `:root` (`--g1`, `--g2`, `--acc`, `--box`, `--panel`, `--ink`, `--line`,
@@ -70,8 +81,8 @@ Unlike the rest of the UI, auth is a **real React feature** in `src/auth/` (stat
 - Tailwind scans `src/**/*.{js,jsx}`, so classes inside engine template strings are picked up.
 
 ## Data
-- `localStorage`: `focusquest` (settings, tasks, theme, shortcuts, banner choice), `fq_garden`, `fq_pix_pal`,
-  `fq_pix_draft`, `fq_custom`.
+- `localStorage`: `focusquest` (settings, tasks, theme, shortcuts, banner choice), `fq_garden`, `fq_garden_meta`, `fq_sid_seq`,
+  `fq_pix_pal`, `fq_pix_draft`, `fq_custom`.
 - IndexedDB `focusquest` (version 2): stores `banners` and `tiles` (Blobs).
 - Garden cells store ids: numbers index `src/data/atlasMeta.js`; strings (`c...`) are custom tiles.
   **Never reorder or insert into `META`**, append only. Removing the tail is safe (the engine drops unknown ids).

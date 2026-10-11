@@ -35,13 +35,15 @@ const checkPw = (pw, stored) => {
   const [s, k] = stored.split(':');
   return crypto.timingSafeEqual(crypto.scryptSync(pw, Buffer.from(s, 'hex'), 32), Buffer.from(k, 'hex'));
 };
-const pub = (u) => ({ id: u.id, name: u.name, email: u.email, provider: u.provider, createdAt: u.createdAt });
+let nextId = 1;
+const iso = (d) => d.toISOString().slice(0, 19).replace('T', ' ');
+const pub = (u) => ({ id: u.id, name: u.name, email: u.email, provider: u.provider.toUpperCase(), 'create-time-stamp': u.createdAt, 'update-time-stamp': u.createdAt });
 
 function cookies(req) {
   return Object.fromEntries((req.headers.cookie || '').split(';').map((c) => c.trim().split('=')).filter((c) => c[0]));
 }
 function refreshCookie(token, maxAge) {
-  return `fq_refresh=${token}; HttpOnly; Path=/api/auth; SameSite=Lax; Max-Age=${maxAge}`;
+  return `fq_refresh=${token}; HttpOnly; Path=/api/v1/auth; SameSite=Lax; Max-Age=${maxAge}`;
 }
 function startSession(uid, remember = true) {
   const token = crypto.randomBytes(32).toString('hex');
@@ -87,14 +89,14 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204);
 
   // OAuth2 (mock): Spring Security would redirect to the provider; here we sign in a demo user straight away.
-  const oauth = url.pathname.match(/^\/oauth2\/authorization\/(\w+)$/);
+  const oauth = url.pathname.match(/^\/api\/v1\/auth\/oauth2\/authorization\/(\w+)$/);
   if (oauth) {
     const provider = oauth[1];
     const email = `demo@${provider}.example`;
     let uid = byEmail.get(email);
     if (!uid) {
-      uid = crypto.randomUUID();
-      users.set(uid, { id: uid, name: `${provider} demo`, email, provider, createdAt: new Date().toISOString() });
+      uid = nextId++;
+      users.set(uid, { id: uid, name: `${provider} demo`, email, provider, createdAt: iso(new Date()) });
       byEmail.set(email, uid);
     }
     const s = startSession(uid);
@@ -103,7 +105,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    if (req.method === 'POST' && url.pathname === '/api/auth/signup') {
+    if (req.method === 'POST' && url.pathname === '/api/v1/auth/signup') {
       const { name, email, password } = await readBody(req);
       const errors = {};
       if (!name || name.trim().length < 2) errors.name = 'Enter at least 2 characters.';
@@ -111,13 +113,13 @@ const server = http.createServer(async (req, res) => {
       if (!strong(password)) errors.password = 'Use 8+ characters with upper and lower case letters and a number.';
       if (Object.keys(errors).length) return send(res, 422, { message: 'Please check the highlighted fields.', errors });
       if (byEmail.has(email.toLowerCase())) return send(res, 409, { message: 'That email is already registered.', errors: { email: 'That email is already registered.' } });
-      const uid = crypto.randomUUID();
-      users.set(uid, { id: uid, name: name.trim(), email: email.toLowerCase(), provider: 'local', passwordHash: hashPw(password), createdAt: new Date().toISOString() });
+      const uid = nextId++;
+      users.set(uid, { id: uid, name: name.trim(), email: email.toLowerCase(), provider: 'local', passwordHash: hashPw(password), createdAt: iso(new Date()) });
       byEmail.set(email.toLowerCase(), uid);
       const s = startSession(uid);
       return send(res, 201, s.body, { 'Set-Cookie': refreshCookie(s.token, s.ttl) });
     }
-    if (req.method === 'POST' && url.pathname === '/api/auth/login') {
+    if (req.method === 'POST' && url.pathname === '/api/v1/auth/login') {
       const ip = req.socket.remoteAddress;
       const a = attempts.get(ip) || { n: 0, at: Date.now() };
       if (Date.now() - a.at > 60000) Object.assign(a, { n: 0, at: Date.now() });
@@ -133,11 +135,11 @@ const server = http.createServer(async (req, res) => {
       const s = startSession(u.id, remember !== false);
       return send(res, 200, s.body, { 'Set-Cookie': refreshCookie(s.token, s.ttl) });
     }
-    if (req.method === 'POST' && (url.pathname === '/api/auth/refresh' || url.pathname === '/api/auth/logout')) {
+    if (req.method === 'POST' && (url.pathname === '/api/v1/auth/refresh' || url.pathname === '/api/v1/auth/logout')) {
       if (req.headers['x-requested-with'] !== 'XMLHttpRequest') return send(res, 403, { message: 'Missing X-Requested-With header.' });
       const old = cookies(req).fq_refresh;
       const rec = old && refresh.get(old);
-      if (url.pathname.endsWith('logout')) {
+      if (url.pathname.endsWith('/logout')) {
         if (old) refresh.delete(old);
         return send(res, 204, undefined, { 'Set-Cookie': refreshCookie('', 0) });
       }
@@ -146,11 +148,11 @@ const server = http.createServer(async (req, res) => {
       const s = startSession(rec.uid);
       return send(res, 200, s.body, { 'Set-Cookie': refreshCookie(s.token, s.ttl) });
     }
-    if (req.method === 'GET' && url.pathname === '/api/auth/me') {
+    if (req.method === 'GET' && url.pathname === '/api/v1/auth/me') {
       const p = verify((req.headers.authorization || '').replace(/^Bearer /, ''));
       return p && users.has(p.sub) ? send(res, 200, pub(users.get(p.sub))) : send(res, 401, { message: 'Not signed in.' });
     }
-    if (req.method === 'POST' && url.pathname === '/api/auth/forgot-password') {
+    if (req.method === 'POST' && url.pathname === '/api/v1/auth/forgot-password') {
       const { email } = await readBody(req);
       const uid = byEmail.get((email || '').toLowerCase());
       if (uid && users.get(uid).passwordHash) {
@@ -160,7 +162,7 @@ const server = http.createServer(async (req, res) => {
       }
       return send(res, 202, { message: 'If that account exists, an email is on its way.' }); // never reveal whether it exists
     }
-    if (req.method === 'POST' && url.pathname === '/api/auth/reset-password') {
+    if (req.method === 'POST' && url.pathname === '/api/v1/auth/reset-password') {
       const { token, password } = await readBody(req);
       const r = resets.get(token);
       if (!r || r.exp < Date.now()) return send(res, 400, { message: 'This reset link is invalid or has expired.' });

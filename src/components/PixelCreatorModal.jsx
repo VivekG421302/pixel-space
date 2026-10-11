@@ -101,7 +101,7 @@ function PixelCreatorModal() {
             </label>
             <label className="fld">
               Category
-              <input id="pxcat" defaultValue="CUSTOM" maxLength="14" list="tcats" />
+              <input id="pxcat" defaultValue="CUSTOMS" maxLength="14" list="tcats" />
             </label>
             <label className="fld">
               Type

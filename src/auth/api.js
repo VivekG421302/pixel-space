@@ -6,6 +6,8 @@
 //  - Requests send credentials and an X-Requested-With header (CSRF guard for cookie-based endpoints).
 
 const BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+// {{Base Url}} in the docs = VITE_API_BASE_URL + API_PREFIX
+export const API_PREFIX = '/api/v1';
 
 export const OAUTH_PROVIDERS = (import.meta.env.VITE_OAUTH_PROVIDERS ?? 'google,github')
   .split(',')
@@ -84,7 +86,7 @@ async function request(path, { method = 'GET', body, auth = false, retry = true 
 /** Exchanges the httpOnly refresh cookie for a new access token. Single-flight. */
 export function refreshSession() {
   if (!refreshing) {
-    refreshing = request('/api/auth/refresh', { method: 'POST' })
+    refreshing = request(`${API_PREFIX}/auth/refresh`, { method: 'POST' })
       .then((d) => {
         setToken(d.accessToken, d.expiresIn);
         return d;
@@ -102,22 +104,22 @@ async function establish(path, body) {
   return d;
 }
 
-export const login = (email, password, remember) => establish('/api/auth/login', { email, password, remember: !!remember });
-export const signup = (name, email, password) => establish('/api/auth/signup', { name, email, password });
-export const me = () => request('/api/auth/me', { auth: true });
-export const forgotPassword = (email) => request('/api/auth/forgot-password', { method: 'POST', body: { email } });
-export const resetPassword = (token, password) => request('/api/auth/reset-password', { method: 'POST', body: { token, password } });
+export const login = (email, password, remember) => establish(`${API_PREFIX}/auth/login`, { email, password, remember: !!remember });
+export const signup = (name, email, password) => establish(`${API_PREFIX}/auth/signup`, { name, email, password });
+export const me = () => request(`${API_PREFIX}/auth/me`, { auth: true });
+export const forgotPassword = (email) => request(`${API_PREFIX}/auth/forgot-password`, { method: 'POST', body: { email } });
+export const resetPassword = (token, password) => request(`${API_PREFIX}/auth/reset-password`, { method: 'POST', body: { token, password } });
 
 export async function logout() {
   try {
-    await request('/api/auth/logout', { method: 'POST' });
+    await request(`${API_PREFIX}/auth/logout`, { method: 'POST' });
   } finally {
     clearToken();
   }
 }
 
 /** Server-side OAuth2 (Spring Security oauth2Login): the browser is redirected, no tokens travel in the URL. */
-export const oauthUrl = (provider) => `${BASE}/oauth2/authorization/${encodeURIComponent(provider)}`;
+export const oauthUrl = (provider) => `${BASE}${API_PREFIX}/auth/oauth2/authorization/${encodeURIComponent(provider)}`;
 
 /** For future features (progress sync): fetch with the bearer token and one automatic refresh on 401. */
 export const authFetch = (path, opts = {}) => request(path, { ...opts, auth: true });

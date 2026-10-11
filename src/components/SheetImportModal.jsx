@@ -46,7 +46,7 @@ function SheetImportModal() {
             </label>
             <label className="fld">
               Category
-              <input id="slcat" defaultValue="CUSTOM" maxLength="14" list="tcats" />
+              <input id="slcat" defaultValue="CUSTOMS" maxLength="14" list="tcats" />
             </label>
             <label className="fld">
               Type
