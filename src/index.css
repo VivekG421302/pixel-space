@@ -149,6 +149,30 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--acc);hei
 .lye{width:34px;height:30px;padding:0;display:grid;place-items:center;flex:none}.lye svg{width:20px;height:20px}
 .lye.off{opacity:.55}.lye .es{display:none}.lye.off .es{display:block}.lye.off .ep{display:none}
 
+/* account / auth dialog (React-managed, so it uses .amodal instead of the engine's .modal) */
+.amodal{position:fixed;inset:0;background:rgba(32,40,32,.72);display:grid;place-items:center;padding:12px;z-index:60}
+[data-scheme=dark] .amodal{background:rgba(4,6,10,.78)}
+.authbox{width:min(100%,440px)}
+.msep{border-top:3px dashed var(--edge);margin:4px 0 2px}
+.mtxt{display:flex;flex-direction:column;gap:4px}.mtxt small{font-size:7px;opacity:.75}
+.af{display:block;margin-bottom:12px;font-size:8px}.af label{display:block}
+.afrow{display:flex;gap:8px;align-items:center;margin-top:5px}.afrow input{margin:0;font-size:10px;flex:1}
+.aerr{color:#c62828;font-size:8px;margin-top:5px}[data-scheme=dark] .aerr{color:#ff8a80}
+.af input[aria-invalid=true]{border-color:#c62828}
+.pwhelp{margin:-4px 0 12px;font-size:7px}.pwhelp ul{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;opacity:.8}.pwhelp li.ok{color:var(--acc);opacity:1}
+.meter{display:flex;gap:4px}.meter i{flex:1;height:8px;border:2px solid var(--line);background:var(--panel)}.meter i.on{background:var(--acc)}
+.achk{display:flex;align-items:center;gap:8px;font-size:8px;margin:2px 0 14px;cursor:pointer}.achk input{width:16px;height:16px;flex:none;accent-color:var(--acc)}
+.awide{width:100%;display:block}.awide:disabled,.gb:disabled{opacity:.55;cursor:not-allowed;box-shadow:0 4px 0 var(--line);transform:none}
+.alinks{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-top:14px}
+.alink{background:none;border:0;padding:2px 0;font:inherit;font-size:8px;color:var(--ink);text-decoration:underline;cursor:pointer}.alink:hover{color:var(--acc)}
+.aguest{font-size:8px;opacity:.8;margin:0 0 12px;line-height:1.7}
+.notice{border:var(--bd) solid var(--line);border-radius:var(--r);padding:8px 10px;background:var(--box);font-size:8px;margin:0 0 12px;line-height:1.7}.notice.bad{border-color:#c62828}
+.oauthlist{display:flex;flex-direction:column;gap:8px}.oauth{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font-size:9px}
+.gglyph{display:inline-grid;place-items:center;width:16px;height:16px;font-size:11px;font-weight:700;color:#4285f4}
+.or{display:flex;align-items:center;gap:10px;font-size:8px;opacity:.7;margin:14px 0}.or::before,.or::after{content:'';flex:1;border-top:3px dashed var(--edge)}
+.acct{display:flex;align-items:center;gap:14px;margin-bottom:14px}.acctinfo{display:flex;flex-direction:column;gap:5px;min-width:0}.acctinfo small{font-size:8px;opacity:.8;overflow-wrap:anywhere}.acctinfo .prov{color:var(--acc);opacity:1}
+.avatar{width:48px;height:48px;flex:none;display:grid;place-items:center;border:var(--bd) solid var(--line);border-radius:50%;background:var(--acc);color:#fff;font-size:16px}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

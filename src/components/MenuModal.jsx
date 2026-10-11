@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import AccountMenuItem from '../auth/AccountMenuItem';
 
 // Game-style pause menu. Items with data-go forward the click to another control in the app.
 function MenuModal() {
@@ -20,6 +21,8 @@ function MenuModal() {
           <button className="mi" id="mdk" role="menuitem">DARK MODE: <span id="mdkn">LIGHT</span></button>
           <button className="mi" id="mth" role="menuitem">THEME: <span id="mthn">LEAF</span></button>
           <button className="mi" data-close="" role="menuitem">RESUME</button>
+          <div className="msep" aria-hidden="true"></div>
+          <AccountMenuItem />
         </div>
         <div className="sf mhint">▲▼ MOVE · ENTER SELECT · ESC CLOSE</div>
       </div>

@@ -39,6 +39,22 @@ The engine and the JSX must agree. When you rename or remove an element, search 
 - **Never return a falsy value from a DOM0 handler** (`el.onkeydown = e => cond && fn()`): returning `false` cancels
   the event, which silently blocked typing in the task input once. Use a block body: `e => { if (cond) fn(); }`.
 
+## Authentication (login / sign up)
+Unlike the rest of the UI, auth is a **real React feature** in `src/auth/` (state, hooks, controlled forms):
+- `api.js`: fetch client. **Access token in memory only** (never `localStorage`); refresh via the `httpOnly` cookie;
+  single-flight refresh and one retry on `401`; sends `credentials: 'include'` and `X-Requested-With`.
+- `AuthContext.jsx`: `AuthProvider` / `useAuth()` (`status`: `checking | guest | authed`, `user`, `login`, `signup`,
+  `logout`, `forgotPassword`, `resetPassword`, `openAuth`, `authFetch`). Handles `?reset=` and `?auth=success|error`
+  on load, silent session restore (via the `fq_session` hint), proactive refresh, cross-tab logout. Emits the window
+  event `fq:auth-changed` (`detail: { status, user }`) so the imperative engine can react later (e.g. progress sync).
+- `AuthModal.jsx`: login / signup / forgot / reset / account views. It uses `.amodal` (not `.modal`) because the engine
+  toggles `.modal` classes directly and would fight React; it is mounted only while open. Element ids use the `au-` prefix.
+- `AccountMenuItem.jsx`: the **last** item in the game menu (keeps a constant `className="mi"` so the menu cursor works).
+- The app is **guest-first**; never block gameplay on auth. Keep error text generic for credentials and for
+  forgot-password (no account enumeration).
+- Backend contract: `docs/AUTH_API.md`. Local mock: `npm run mock:api` (needs `npm run dev` or `npm run preview`, both proxy `/api`).
+- For future sync code, call `authFetch()` from `src/auth/api.js` (or `useAuth().authFetch`); do not read tokens elsewhere.
+
 ## Styling
 - `src/index.css`: design tokens in `:root` (`--g1`, `--g2`, `--acc`, `--box`, `--panel`, `--ink`, `--line`,
   `--edge`, `--bd`, `--r`), then component styles, then the Tailwind layers at the end (this order matches the
@@ -76,5 +92,5 @@ The engine and the JSX must agree. When you rename or remove an element, search 
 
 ## Known gaps / ideas
 - Port features from `engine/app.js` into hooks and components one at a time.
-- No automated tests yet. A Playwright smoke test (timer, tasks, banner upload, garden paint, pixel creator)
+- No automated tests yet (the auth flows were verified end to end against `scripts/mock-api.mjs` with Playwright). A Playwright smoke test (timer, tasks, banner upload, garden paint, pixel creator)
   would be a good first addition.

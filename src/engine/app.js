@@ -237,7 +237,7 @@ export function initApp() {
    if(binding){e.preventDefault();if(k==='Escape'){binding=null;keysUI();return}if(['Shift','Control','Alt','Meta'].includes(k))return;
     const old=S.keys[binding];for(const a in S.keys)if(S.keys[a]===k&&a!==binding)S.keys[a]=old;S.keys[binding]=k;binding=null;save();keysUI();return}
    if(k==='Escape'){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));return}
-   if(!S.kb||e.ctrlKey||e.metaKey||e.altKey||e.repeat||typing(e.target)||document.querySelector('.modal.open'))return;
+   if(!S.kb||e.ctrlKey||e.metaKey||e.altKey||e.repeat||typing(e.target)||document.querySelector('.modal.open,.amodal.open'))return;
    const a=Object.keys(S.keys).find(a=>S.keys[a]===k);if(a&&ACTS[a]){e.preventDefault();ACTS[a]()}});
   addEventListener('keyup',e=>{if(S.kb&&e.key===' '&&S.keys.play===' '&&!typing(e.target))e.preventDefault()});
   /* ---- banner library (IndexedDB keeps uploads and history) ---- */

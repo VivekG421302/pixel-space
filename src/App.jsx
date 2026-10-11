@@ -11,6 +11,8 @@ import TileManagerModal from './components/TileManagerModal';
 import SheetImportModal from './components/SheetImportModal';
 import PixelCreatorModal from './components/PixelCreatorModal';
 import { initApp } from './engine/app';
+import { AuthProvider } from './auth/AuthContext';
+import AuthModal from './auth/AuthModal';
 
 export default function App() {
   // Attach the interactive engine once the markup is in the DOM.
@@ -19,7 +21,7 @@ export default function App() {
   }, []);
 
   return (
-    <>
+    <AuthProvider>
       <Dashboard />
       <Buddy />
       <MenuModal />
@@ -31,6 +33,7 @@ export default function App() {
       <SheetImportModal />
       <PixelCreatorModal />
       <HiddenInputs />
-    </>
+      <AuthModal />
+    </AuthProvider>
   );
 }

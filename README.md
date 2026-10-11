@@ -23,7 +23,7 @@ a single-page rewrite, and long-lived caching for built assets. No environment v
 ### Menu
 Press **MENU** (or `,`) for a game-style pop-up in the middle of the screen. Move with the mouse or
 `↑` `↓`, choose with `Enter`, close with `Esc`. It opens Settings, About, Banners, the Tile Manager,
-the sprite-sheet importer, the Pixel Creator, the Garden, and switches dark mode and the colour theme.
+the sprite-sheet importer, the Pixel Creator, the Garden, switches dark mode and the colour theme, and ends with the account item (log in / sign up).
 
 ### Dark mode and themes
 - **Dark mode** has three settings: **Light** (default), **Dark** and **Auto** (follows your device).
@@ -133,12 +133,28 @@ while a pop-up is open.
 Inside the Pixel Creator: `P` pencil, `E` eraser, `F` fill, `I` pick, `L` line, `R` rect, `M` move
 reference, `G` grid, `[` `]` brush size, `Ctrl Z` / `Ctrl Y` undo / redo.
 
+### Accounts: log in and sign up
+The app starts in **guest mode** and works fully without an account. Open **Menu**; the **last item** is
+**LOGIN / SIGN UP** (it shows your name once signed in). From there:
+- **Log in** with email and password (with "keep me signed in", show/hide password), or continue with **Google** or **GitHub**.
+- **Sign up** with a display name, email and a password (live strength meter and rules, confirm field).
+- **Forgot password** sends a reset link by email; opening that link shows the **new password** screen.
+- **Account** shows who you are and lets you **sign out**. Signing out in one tab signs out the others.
+
+Sessions use a short-lived **JWT access token** kept in memory and an `httpOnly` **refresh cookie** set by your Spring Boot
+backend, so a page reload restores the session silently. Progress sync across devices is the next step; for now
+everything is still stored on the device. The backend contract, cookie rules, MySQL schema and SMTP flow are in
+[`docs/AUTH_API.md`](docs/AUTH_API.md). To try the screens without a backend, run `npm run mock:api` in one terminal and
+`npm run dev` in another (the mock prints reset links to its console).
+
+Configuration lives in `.env.local` (see `.env.example`): `VITE_API_BASE_URL`, `VITE_OAUTH_PROVIDERS`, `DEV_API_PROXY`.
+
 ### Sound
 8-bit chimes made with the Web Audio API (no audio files): click, task complete, session end.
 Toggle and volume are in Settings → Sound.
 
 ## Data and privacy
-Everything stays in your browser. Settings, tasks, theme, palette and garden use `localStorage`
+Without an account everything stays in your browser. Signing in only adds the session (the refresh cookie and an in-memory access token); nothing else is sent to the server yet. Settings, tasks, theme, palette and garden use `localStorage`
 (`focusquest`, `fq_garden`, `fq_pix_pal`, `fq_pix_draft`, `fq_custom`). Banners and custom tiles use
 IndexedDB (database `focusquest`). **Settings → Reset data** clears all of it.
 
@@ -148,6 +164,9 @@ IndexedDB (database `focusquest`). **Settings → Reset data** clears all of it.
 index.html              Vite entry (loads the Press Start 2P font)
 vercel.json             Vercel build and routing config
 CLAUDE.md               Guide for AI coding assistants working on this repo
+docs/AUTH_API.md        Backend contract for login, sign up, OAuth and password reset
+scripts/mock-api.mjs    Dev-only mock of the auth API (npm run mock:api)
+.env.example            Frontend settings
 src/
   main.jsx              React entry
   App.jsx               Composes the layout and pop-ups, starts the engine
@@ -156,6 +175,7 @@ src/
     Dashboard, Banner, Timer, Calendar, Tasks, Buddy
     MenuModal, SettingsModal, AboutModal, BannerModal, GardenModal,
     TileManagerModal, SheetImportModal, PixelCreatorModal
+  auth/                 Login / sign up (React): api client, context, modal, validation
   engine/app.js         Interactive logic (timer, tasks, buddy, banners, garden, tiles, pixel creator)
   assets/               cats.png, saga.png (buddy sheets), atlas.png (garden sprites)
   data/atlasMeta.js     Garden sprite index
