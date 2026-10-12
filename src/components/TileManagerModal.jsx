@@ -4,9 +4,9 @@ import { memo } from 'react';
 function TileManagerModal() {
   return (
     <div className="modal" id="mt">
-      <div className="box sheet" style={{width: 'min(100%,660px)'}} role="dialog" aria-label="Tile manager">
+      <div className="box sheet" style={{width: 'min(100%,660px)'}} role="dialog" aria-modal="true" aria-label="Tile manager">
         <div className="sh">
-          <h2 className="text-[12px]">TILE MANAGER</h2>
+          <h2 className="text-[length:calc(12px*var(--ts))]">TILE MANAGER</h2>
           <button className="gb !px-2 !py-1" data-close="" aria-label="Close">✕</button>
         </div>
         <div className="sb">
@@ -15,14 +15,14 @@ function TileManagerModal() {
             <button className="gb sm" id="bsl2">IMPORT SPRITE SHEET</button>
             <button className="gb sm" id="bpx2">DRAW PIXEL ART</button>
           </div>
-          <p className="text-[8px] opacity-70 my-3" id="tmmsg">
+          <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] my-3" id="tmmsg">
             PNG, GIF, JPG or WEBP. Pick a tile to rename, categorise, rotate, flip, trim or crop it. Use the arrows to reorder it in the garden dock.
           </p>
           <div id="tmg"></div>
           <div id="tme" className="tm-ed" style={{display: 'none'}}>
             <div>
               <canvas id="tec"></canvas>
-              <p className="text-[8px] opacity-70 mt-2" id="tei"></p>
+              <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-2" id="tei"></p>
             </div>
             <div>
               <label className="fld">
@@ -56,7 +56,7 @@ function TileManagerModal() {
                 <button className="gb sm" id="tdl">DELETE</button>
                 <button className="gb sm" id="tepx">EDIT PIXELS</button>
               </div>
-              <p className="text-[8px] opacity-70 mt-3">Drag on the preview to choose a crop area, then press CROP.</p>
+              <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-3">Drag on the preview to choose a crop area, then press CROP.</p>
             </div>
           </div>
         </div>

@@ -62,6 +62,15 @@ napping on the clock during breaks, and cheering when you finish a mission or a 
 - Choose a buddy in Settings → Buddy: four cats (Snow, Shadow, Ginger, Tuxedo) and the 32-character
   Saga crew. You can also upload your own sprite sheet (columns, rows, frame lists, facing direction).
 
+### Buddy facts and jokes
+Hover your buddy (or focus it with the keyboard and press Enter, or tap it on a phone) and it says a **fresh fact or joke**
+from a free public API: jokes from [JokeAPI](https://v2.jokeapi.dev) in its family-friendly safe mode, facts from
+[Useless Facts](https://uselessfacts.jsph.pl). Two-part jokes show the setup first, then the punchline. The buddy holds still
+while you read, repeats the last line if you hover again within 20 seconds, and never repeats a recent one.
+If you are offline, the APIs are blocked, or a result is too long, it uses built-in lines and marks them **(OFFLINE)**.
+Settings → Buddy Talk turns it off or limits it to **Facts** or **Jokes**. Requests are made from your browser only when you hover,
+focus or tap the buddy, with no cookies and no referrer, so those two services can see your IP address as with any website.
+
 ### Banner
 The banner above the timer keeps a fixed 3:1 shape (images are cropped to fit, never stretched).
 - ✎ opens the **banner library**: upload GIF / PNG / JPG / WEBP (up to 15 MB), click a past banner to
@@ -114,7 +123,7 @@ Menu → Pixel Creator (or **Draw** in the garden).
 
 ### Keyboard shortcuts
 All defaults can be changed in Settings → Shortcuts. They pause while you type in a text field or
-while a pop-up is open.
+while a pop-up is open. `Space` presses a focused button instead of starting the timer.
 
 | Action | Default |
 |---|---|
@@ -148,6 +157,26 @@ everything is still stored on the device. The backend contract, cookie rules, My
 `npm run dev` in another (the mock prints reset links to its console).
 
 Configuration lives in `.env.local` (see `.env.example`): `VITE_API_BASE_URL`, `VITE_OAUTH_PROVIDERS`, `DEV_API_PROXY`.
+
+### Accessibility and comfort
+The interface is built to WCAG 2.2 AA and was checked with the axe-core engine on the main screen and every dialog
+(light, dark and high contrast) with zero violations.
+- **Keyboard:** everything works without a mouse. A **Skip to timer controls** link comes first. Dialogs trap focus, move
+  focus in when they open and back to the button you used when they close, and `Esc` closes only the top dialog. Shortcut keys
+  never steal `Space` from a focused button. Keyboard shortcuts are listed under **Menu → Keyboard shortcuts**.
+- **Screen readers:** real headings and landmarks, a tab list for Tasks / History, mission checkboxes as proper buttons with
+  names, the calendar as a table with `aria-current` on today, a progress bar and timer with spoken values, and polite
+  announcements for timer start, pause and finish, missions added, completed or deleted, and buddy facts.
+- **Settings → Accessibility:**
+  - **Font:** Pixel (default) or **Readable** (Atkinson Hyperlegible, designed for low vision).
+  - **Text size:** Normal, Large or Extra (scales all text without breaking the layout).
+  - **Contrast:** Normal or **High** (black and white, thicker borders, no faded text).
+  - **Motion:** Auto (follows your device), Reduced or Full. Reduced motion stops animations and keeps the buddy calm.
+- **Colours:** accent colours are adjusted automatically in every theme, mode and dark mode so text and buttons keep at least a
+  4.5:1 contrast ratio.
+- **Touch:** controls are at least 40 to 44 px tall on touch screens, and mission checkboxes have enlarged hit areas.
+- **Safer actions:** destructive actions (reset all data, clear the garden, delete a tile, clear the canvas) ask first in an
+  in-app dialog with Cancel selected by default.
 
 ### Sound
 8-bit chimes made with the Web Audio API (no audio files): click, task complete, session end.
@@ -453,6 +482,7 @@ src/
   assets/               cats.png, saga.png (buddy sheets), atlas.png (garden sprites)
   data/atlasMeta.js     Garden sprite index
   data/dto.js           Backend DTO builders (sprite, garden, task, user)
+  data/funFacts.js      Buddy facts and jokes (public APIs with offline fallback)
 ```
 
 ## Credits

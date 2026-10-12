@@ -3,8 +3,8 @@ import { memo } from 'react';
 // Static markup. Behaviour is attached by src/engine/app.js (see README).
 function Banner() {
   return (
-    <section className="box ban" id="ban">
-      <div id="cov"></div>
+    <section className="box ban" id="ban" aria-label="Banner">
+      <div id="cov" aria-hidden="true"></div>
       <div className="bempty">
         <span>NO BANNER YET</span>
         <button className="gb sm on" id="bup">UPLOAD</button>

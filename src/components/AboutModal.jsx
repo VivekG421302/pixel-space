@@ -4,9 +4,9 @@ import { memo } from 'react';
 function AboutModal() {
   return (
     <div className="modal" id="ma">
-      <div className="box sheet" role="dialog" aria-label="About">
+      <div className="box sheet" role="dialog" aria-modal="true" aria-label="About">
         <div className="sh">
-          <h2 className="text-[12px]">ABOUT</h2>
+          <h2 className="text-[length:calc(12px*var(--ts))]">ABOUT</h2>
           <button className="gb !px-2 !py-1" data-close="" aria-label="Close">✕</button>
         </div>
         <div className="sb">

@@ -4,9 +4,9 @@ import { memo } from 'react';
 function SheetImportModal() {
   return (
     <div className="modal" id="msl">
-      <div className="box sheet" style={{width: 'min(100%,720px)'}} role="dialog" aria-label="Import sprite sheet">
+      <div className="box sheet" style={{width: 'min(100%,720px)'}} role="dialog" aria-modal="true" aria-label="Import sprite sheet">
         <div className="sh">
-          <h2 className="text-[12px]">IMPORT SPRITE SHEET</h2>
+          <h2 className="text-[length:calc(12px*var(--ts))]">IMPORT SPRITE SHEET</h2>
           <button className="gb !px-2 !py-1" data-close="" aria-label="Close">✕</button>
         </div>
         <div className="sb">
@@ -21,9 +21,9 @@ function SheetImportModal() {
             <button className="gb sm" data-g="64">64</button>
             <button className="gb sm" data-g="128">128</button>
             <button className="gb sm" data-g="256">256</button>
-            <span className="text-[8px]">W</span>
+            <span className="text-[length:calc(10px*var(--ts))]">W</span>
             <input id="slw" type="number" min="1" max="1024" defaultValue="32" style={{width: '84px'}} aria-label="Tile width in pixels" />
-            <span className="text-[8px]">H</span>
+            <span className="text-[length:calc(10px*var(--ts))]">H</span>
             <input id="slh" type="number" min="1" max="1024" defaultValue="32" style={{width: '84px'}} aria-label="Tile height in pixels" />
             <button className="gb sm" id="slap">SET</button>
           </div>
@@ -33,7 +33,7 @@ function SheetImportModal() {
           </div>
           <canvas id="slp"></canvas>
           <div className="row" style={{margin: '10px 0'}}>
-            <span id="slcnt" className="text-[8px]">Choose an image to begin.</span>
+            <span id="slcnt" className="text-[length:calc(10px*var(--ts))]">Choose an image to begin.</span>
             <span className="cbar">
               <button className="gb sm" id="sla">ALL</button>
               <button className="gb sm" id="sln">NONE</button>
@@ -57,7 +57,7 @@ function SheetImportModal() {
               </select>
             </label>
           </div>
-          <p className="text-[8px] opacity-70" id="slmsg">Click cells to include or skip them. Tiles are cut at the grid size you pick.</p>
+          <p className="text-[length:calc(10px*var(--ts))] opacity-[.86]" id="slmsg">Click cells to include or skip them. Tiles are cut at the grid size you pick.</p>
         </div>
         <div className="sf">
           <button className="gb" data-close="">CLOSE</button>

@@ -4,7 +4,7 @@ import { memo } from 'react';
 function GardenModal() {
   return (
     <div className="modal gmodal" id="mg">
-      <div className="box gwrap" role="dialog" aria-label="Garden">
+      <div className="box gwrap" role="dialog" aria-modal="true" aria-label="Garden">
         <div className="gtop">
           <b>GARDEN</b>
           <button className="gb sm on" data-tool="paint">PAINT</button>
@@ -29,7 +29,7 @@ function GardenModal() {
         <div className="gdock">
           <div className="gtabs">
             <span id="gtb" className="gtabs"></span>
-            <span className="text-[8px] opacity-70">Click paints · right click erases · MOVE drags a tile · 2 layers per tile</span>
+            <span className="text-[length:calc(10px*var(--ts))] opacity-[.86]">Click paints · right click erases · MOVE drags a tile · 2 layers per tile</span>
           </div>
           <div id="gpal"></div>
         </div>

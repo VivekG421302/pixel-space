@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import Dashboard from './components/Dashboard';
 import Buddy from './components/Buddy';
 import HiddenInputs from './components/HiddenInputs';
+import ConfirmModal from './components/ConfirmModal';
 import MenuModal from './components/MenuModal';
 import SettingsModal from './components/SettingsModal';
 import AboutModal from './components/AboutModal';
@@ -22,6 +23,7 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <a className="skip" href="#play">Skip to timer controls</a>
       <Dashboard />
       <Buddy />
       <MenuModal />
@@ -32,6 +34,7 @@ export default function App() {
       <TileManagerModal />
       <SheetImportModal />
       <PixelCreatorModal />
+      <ConfirmModal />
       <HiddenInputs />
       <AuthModal />
     </AuthProvider>

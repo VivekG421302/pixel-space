@@ -4,7 +4,7 @@ import { memo } from 'react';
 function PixelCreatorModal() {
   return (
     <div className="modal gmodal" id="mp">
-      <div className="box gwrap" role="dialog" aria-label="Pixel art creator">
+      <div className="box gwrap" role="dialog" aria-modal="true" aria-label="Pixel art creator">
         <div className="gtop">
           <b>PIXEL CREATOR</b>
           <button className="gb sm on" data-px="pencil" title="Pencil (P)">PENCIL</button>
@@ -32,20 +32,24 @@ function PixelCreatorModal() {
           <div className="pxside">
             <div className="pxsec">LAYERS</div>
             <div className="lyrs">
-              <div className="lyr" data-ly="ref" role="button" tabIndex={0} aria-label="Layer 1, reference image">
-                <span className="lyn">1</span>
-                <svg className="lyi" viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><rect x="1" y="2" width="14" height="12" fill="none" stroke="currentColor" strokeWidth="2" /><rect x="10" y="5" width="2" height="2" fill="currentColor" /><path d="M3 12 L6 8 L8 10 L10 8 L13 12 Z" fill="currentColor" /></svg>
-                <span className="lyt"><b>REFERENCE</b><small id="lyrs">IMAGE · none</small></span>
+              <div className="lyr" data-ly="ref">
+                <button type="button" className="lyrsel" aria-pressed="false">
+                  <span className="lyn">1</span>
+                  <svg className="lyi" viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><rect x="1" y="2" width="14" height="12" fill="none" stroke="currentColor" strokeWidth="2" /><rect x="10" y="5" width="2" height="2" fill="currentColor" /><path d="M3 12 L6 8 L8 10 L10 8 L13 12 Z" fill="currentColor" /></svg>
+                  <span className="lyt"><b>REFERENCE</b><small id="lyrs">IMAGE · none</small></span>
+                </button>
                 <button className="gb sm lye" id="lyre" aria-label="Show or hide the reference layer" title="Show / hide"><svg viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M1 8 L4 4 H12 L15 8 L12 12 H4 Z" fill="none" stroke="currentColor" strokeWidth="2" /><rect className="ep" x="7" y="6" width="3" height="4" fill="currentColor" /><path className="es" d="M2 14 L14 2" stroke="currentColor" strokeWidth="2" /></svg></button>
               </div>
-              <div className="lyr on" data-ly="draw" role="button" tabIndex={0} aria-label="Layer 2, drawing">
-                <span className="lyn">2</span>
-                <svg className="lyi" viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M11 1 L15 5 L5 15 L1 15 L1 11 Z" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M9 3 L13 7" stroke="currentColor" strokeWidth="2" /></svg>
-                <span className="lyt"><b>DRAWING</b><small>PIXELS</small></span>
+              <div className="lyr on" data-ly="draw">
+                <button type="button" className="lyrsel" aria-pressed="true">
+                  <span className="lyn">2</span>
+                  <svg className="lyi" viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M11 1 L15 5 L5 15 L1 15 L1 11 Z" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M9 3 L13 7" stroke="currentColor" strokeWidth="2" /></svg>
+                  <span className="lyt"><b>DRAWING</b><small>PIXELS</small></span>
+                </button>
                 <button className="gb sm lye" id="lyde" aria-label="Show or hide the drawing layer" title="Show / hide"><svg viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M1 8 L4 4 H12 L15 8 L12 12 H4 Z" fill="none" stroke="currentColor" strokeWidth="2" /><rect className="ep" x="7" y="6" width="3" height="4" fill="currentColor" /><path className="es" d="M2 14 L14 2" stroke="currentColor" strokeWidth="2" /></svg></button>
               </div>
             </div>
-            <p className="text-[8px] opacity-70 mt-2">Layer 1 sits under layer 2. Click a layer to work on it. Only layer 2 is saved as the tile.</p>
+            <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-2">Layer 1 sits under layer 2. Click a layer to work on it. Only layer 2 is saved as the tile.</p>
             <div className="pxsec">CANVAS SIZE</div>
             <div className="cbar" id="pxs">
               <button className="gb sm" data-s="8">8</button>
@@ -62,7 +66,7 @@ function PixelCreatorModal() {
               <button className="gb sm" id="pxap">SET</button>
             </div>
             <div className="cbar" style={{marginTop: '10px'}}>
-              <label className="text-[8px]">
+              <label className="text-[length:calc(10px*var(--ts))]">
                 BRUSH{' '}
                 <select id="pxbs" style={{width: '64px'}}>
                   <option>1</option>
@@ -91,7 +95,7 @@ function PixelCreatorModal() {
             <div className="cbar">
               <button className="gb sm" id="pxtr">TRACE TO PALETTE</button>
             </div>
-            <p className="text-[8px] opacity-70 mt-2">
+            <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-2">
               Drag the image into place with MOVE REF. PICK also samples the reference where a cell is empty.
             </p>
             <div className="pxsec">SAVE</div>
@@ -119,7 +123,7 @@ function PixelCreatorModal() {
               <button className="gb sm" id="pxup" style={{display: 'none'}}>UPDATE TILE</button>
               <button className="gb sm" id="pxpn">PNG</button>
             </div>
-            <p className="text-[8px] opacity-70 mt-3" id="pxmsg">Pick a colour, then click the grid to draw. Your palette and draft are saved.</p>
+            <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-3" id="pxmsg">Pick a colour, then click the grid to draw. Your palette and draft are saved.</p>
           </div>
         </div>
         <div className="pxdock">
@@ -128,7 +132,7 @@ function PixelCreatorModal() {
           <button className="gb sm" id="pxdel">REMOVE</button>
           <div className="pxpal" id="pxpal"></div>
           <button className="gb sm" id="pxex">FROM REF</button>
-          <span className="text-[8px] opacity-70" id="pxpos"></span>
+          <span className="text-[length:calc(10px*var(--ts))] opacity-[.86]" id="pxpos"></span>
         </div>
       </div>
     </div>

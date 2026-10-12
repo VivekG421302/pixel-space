@@ -6,6 +6,7 @@ import SHEET from '../assets/cats.png';
 import SAGA from '../assets/saga.png';
 import ATLAS from '../assets/atlas.png';
 import { META } from '../data/atlasMeta.js';
+import { getTalk } from '../data/funFacts.js';
 import { BUILTIN_TS, SPRITE_TYPES, gardenDto, imageDataToMatrix, spriteDto, taskDto, userDto } from '../data/dto.js';
 
 let started = false;
@@ -16,7 +17,7 @@ export function initApp() {
   const $=s=>document.querySelector(s),LS=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
   const MODES={pomo:{n:'POMODORO',f:25,b:5,c:['#78c850','#68b840','#48a030']},r52:{n:'52/17',f:52,b:17,c:['#68b8e8','#58a8d8','#3878c8']},u90:{n:'90-MIN',f:90,b:20,c:['#a890d0','#9880c0','#6850a0']},tbx:{n:'TIMEBOX',f:60,b:10,c:['#f8a050','#e89040','#d06820']},cus:{n:'CUSTOM',f:30,b:10,c:['#b8b8a8','#a8a898','#707868']}};
   const DK={play:' ',reset:'r',skip:'s',mode:'m',task:'n',tabs:'t',sound:'x',menu:',',garden:'g',banner:'b',dark:'d'};
-  let S=Object.assign({mode:'pomo',snd:true,vol:60,pet:'cat3',dur:{},tasks:[],custom:null,banner:'default',cover:null,kb:true,keys:{},theme:'leaf',scheme:'light'},LS('focusquest')||{},{cover:LS('fq_cover'),custom:LS('fq_custom')});{const sk=S.keys||{};S.keys={...DK,...sk};if(!sk.menu&&sk.settings)S.keys.menu=sk.settings;delete S.keys.settings;delete S.keys.about;if(S.theme==='night'){S.theme='leaf';S.scheme='dark'}}
+  let S=Object.assign({mode:'pomo',snd:true,vol:60,pet:'cat3',dur:{},tasks:[],custom:null,banner:'default',cover:null,kb:true,keys:{},theme:'leaf',scheme:'light',a11y:{},talk:{}},LS('focusquest')||{},{cover:LS('fq_cover'),custom:LS('fq_custom')});{const sk=S.keys||{};S.keys={...DK,...sk};if(!sk.menu&&sk.settings)S.keys.menu=sk.settings;delete S.keys.settings;delete S.keys.about;if(S.theme==='night'){S.theme='leaf';S.scheme='dark'}S.a11y={font:'pixel',text:'normal',contrast:'normal',motion:'auto',...S.a11y};S.talk={on:true,mode:'both',...S.talk}}
   const save=()=>{const{cover,custom,...r}=S;SV('focusquest',r);SV('fq_custom',custom);return SV('fq_cover',cover)};
   const dur=m=>({f:S.dur[m]?.f??MODES[m].f,b:S.dur[m]?.b??MODES[m].b});
   let phase='focus',left=dur(S.mode).f*60,run=false,endAt=0,tick;
@@ -57,7 +58,7 @@ export function initApp() {
    if(tries)return false;const c=cur();if(!c)return false;
    P.tx=Math.max(c.x1,Math.min(c.x2,P.x+Math.sign(dx)*(Math.abs(dx)-m*.5)));P.pend={id,tx,after};P.st='walk';P.t=0;return true}
   const gap=l=>Math.abs(Math.max(l.x1,Math.min(l.x2,P.x))-P.x);
-  function next(c){P.t=0;P.pend=null;const brk=phase==='break',busy=run&&phase==='focus';
+  function next(c){P.t=0;P.pend=null;if((P.hov||reducedMotion())&&phase!=='break'){P.st='idle';P.hold=P.hov?.8:8;return}const brk=phase==='break',busy=run&&phase==='focus';
    if(P.lid==='floor'&&!brk&&Math.random()<.4){const hi=L.filter(l=>l.id!=='floor').sort((a,b)=>b.y-a.y)[0];if(hi){go(hi.id)||hop(hi.id);return}}
    if(brk){if(P.lid!=='clock'){if(!go('clock'))hop('clock');return}P.tx=(c.x1+c.x2)/2+rnd(-30,30);return P.st='walk'}
    const r=Math.random(),oth=L.filter(l=>l.id!==P.lid&&l.id!=='floor'&&Math.abs(l.y-P.y)<=300).sort((a,b)=>gap(a)-gap(b)).slice(0,2);
@@ -115,7 +116,7 @@ export function initApp() {
      if(k>=1){P.lid=l.id;P.y=l.y;P.t=0;P.hold=rnd(.4,1);P.st=P.after||'idle';if(P.after){P.hold=1.6;P.after=null;burst(P.x,P.y-SH*.5,['★','♥'])}}}}
    else{const c=cur();
     if(!c){const o=L.filter(l=>l.id!==P.lid);if(o.length)hop(o[0|rnd(0,o.length)].id)}
-    else{P.y=c.y;P.x=Math.max(c.x1,Math.min(c.x2,P.x));
+    else{P.y=c.y;P.x=Math.max(c.x1,Math.min(c.x2,P.x));if(P.hov&&P.st==='walk'){P.st='idle';P.t=0;P.hold=.6}
      if(brk&&P.st!=='sleep'&&P.st!=='walk'&&P.st!=='happy'&&P.st!=='wave')next(c);
      if(P.st==='walk'){const sp=(busy?100:62)*sc/2,d=P.tx-P.x;P.dir=d>=0?1:-1;P.x+=Math.sign(d)*Math.min(Math.abs(d),sp*dt);if(Math.abs(d)<3){if(P.pend){const q=P.pend;P.pend=null;if(!go(q.id,q.tx,q.after,1))next(c)}else if(brk&&P.lid==='clock'){P.st='sleep';P.t=0}else next(c)}}
      else if(P.st==='sleep'){off=Math.sin(P.t*2)*1.5;if(!brk){P.st='stretch';P.t=0;P.hold=1.1;P.bs='!';P.bt=1}}
@@ -131,7 +132,7 @@ export function initApp() {
    if(txt){if(bub.textContent!==txt)bub.textContent=txt;bub.style.display='block';const w=bub.offsetWidth,hh=bub.offsetHeight,bx=Math.max(6,Math.min(innerWidth-w-6,P.x-w/2));bub.style.setProperty('--tx',Math.max(10,Math.min(w-10,P.x-bx))+'px');bub.style.transform=`translate(${bx}px,${Math.max(6,ty+headTop(p,i)*sc-hh-9)}px)`}else bub.style.display='none'}
 
   /* ---- dialog typewriter ---- */
-  let tw,last='';function say(t){if(t===last)return;last=t;clearInterval(tw);let i=0;const e=$('#status');e.textContent='';tw=setInterval(()=>{e.textContent=t.slice(0,++i);if(i>=t.length)clearInterval(tw)},28)}
+  let tw,last='',annKey=null;function say(t){if(t===last)return;last=t;clearInterval(tw);const e=$('#status');if(reducedMotion()){e.textContent=t;return}let i=0;e.textContent='';tw=setInterval(()=>{e.textContent=t.slice(0,++i);if(i>=t.length)clearInterval(tw)},28)}
 
   /* ---- timer ---- */
   /* ---- themes (tokens live in index.css; grass colours are tinted here) ---- */
@@ -139,8 +140,11 @@ export function initApp() {
   const DARK={g:['#0b1510',.66],a:['#0b1510',.12]},SCHEMES={light:'LIGHT',dark:'DARK',auto:'AUTO'};
   const sysDark=matchMedia('(prefers-color-scheme: dark)'),isDark=()=>S.scheme==='dark'||(S.scheme==='auto'&&sysDark.matches);
   const tint=(h,t)=>t?hexOf(rgbOf(h).map((v,i)=>v+(rgbOf(t[0])[i]-v)*t[1])):h;
-  function thUI(){const e=$('#ths');if(e)e.innerHTML=Object.entries(THEMES).map(([k,t])=>`<button class="gb sm ${S.theme===k?'on':''}" data-th="${k}">${t.n}</button>`).join('');const n=$('#mthn');if(n)n.textContent=(THEMES[S.theme]||THEMES.leaf).n;
-   const d=$('#dks');if(d)d.innerHTML=Object.entries(SCHEMES).map(([k,l])=>`<button class="gb sm ${S.scheme===k?'on':''}" data-sc="${k}">${l}</button>`).join('');const m=$('#mdkn');if(m)m.textContent=SCHEMES[S.scheme]||'LIGHT'}
+  const lum=h=>{const[r,g,b]=rgbOf(h).map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});return .2126*r+.7152*g+.0722*b};
+  const ratio=(a,b)=>{const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+  const fit=(h,against,min,toward)=>{let c=h;for(let i=0;i<24&&ratio(c,against)<min;i++)c=tint(c,[toward,.1]);return c}; // nudge a colour until it meets a WCAG contrast ratio
+  function thUI(){const e=$('#ths');if(e)e.innerHTML=Object.entries(THEMES).map(([k,t])=>`<button class="gb sm ${S.theme===k?'on':''}" data-th="${k}" aria-pressed="${S.theme===k}">${t.n}</button>`).join('');const n=$('#mthn');if(n)n.textContent=(THEMES[S.theme]||THEMES.leaf).n;
+   const d=$('#dks');if(d)d.innerHTML=Object.entries(SCHEMES).map(([k,l])=>`<button class="gb sm ${S.scheme===k?'on':''}" data-sc="${k}" aria-pressed="${S.scheme===k}">${l}</button>`).join('');const m=$('#mdkn');if(m)m.textContent=SCHEMES[S.scheme]||'LIGHT'}
   function thSet(k){if(!THEMES[k])return;S.theme=k;save();ui();thUI()}
   function schSet(k){if(!SCHEMES[k])return;S.scheme=k;save();ui();thUI()}
   const schemeNext=()=>{const ks=Object.keys(SCHEMES);schSet(ks[(ks.indexOf(S.scheme)+1)%ks.length])};
@@ -148,13 +152,13 @@ export function initApp() {
   sysDark.addEventListener&&sysDark.addEventListener('change',()=>{if(S.scheme==='auto')ui()});
   const themeNext=()=>{const ks=Object.keys(THEMES);thSet(ks[(ks.indexOf(S.theme)+1)%ks.length])};
   $('#ths').onclick=e=>{const b=e.target.closest('[data-th]');if(b){click();thSet(b.dataset.th)}};
-  const Q={focusfalse:['A wild {m} session appeared! Press A to start.','Ready when you are, trainer.','Your buddy is stretching. Start the timer!','Pick a mission, then press A.'],focustrue:['Deep focus protocol active!','Keep going, trainer!','Your buddy is cheering you on.','Quiet mind, steady progress.'],breakfalse:['Break is ready. Press A to rest.','Time to recharge. Press A.','You earned this one.'],breaktrue:['Break time! Your buddy is napping.','Stretch, sip some water, breathe.','Rest up. The next round is coming.']};
+  const Q={focusfalse:['A wild {m} session appeared! Press START (or Space) to begin.','Ready when you are, trainer.','Your buddy is stretching. Start the timer!','Pick a mission, then press START.'],focustrue:['Deep focus protocol active!','Keep going, trainer!','Your buddy is cheering you on.','Quiet mind, steady progress.'],breakfalse:['Break is ready. Press START to rest.','Time to recharge. Press START.','You earned this one.'],breaktrue:['Break time! Your buddy is napping.','Stretch, sip some water, breathe.','Rest up. The next round is coming.']};
   let qk='',qt='';function quip(k,m){if(k!==qk){qk=k;const a=Q[k];qt=a[0|Math.random()*a.length].replace('{m}',m.n)}return qt}
   function ui(){const m=MODES[S.mode],r=document.documentElement.style;
-   const th=THEMES[S.theme]||THEMES.leaf,dk=isDark(),dg=dk&&DARK.g,da=dk&&DARK.a;document.documentElement.dataset.theme=THEMES[S.theme]?S.theme:'leaf';document.documentElement.dataset.scheme=dk?'dark':'light';r.setProperty('--g1',tint(tint(m.c[0],th.g),dg));r.setProperty('--g2',tint(tint(m.c[1],th.g),dg));r.setProperty('--acc',tint(tint(m.c[2],th.a),da));
+   const th=THEMES[S.theme]||THEMES.leaf,dk=isDark(),dg=dk&&DARK.g,da=dk&&DARK.a;document.documentElement.dataset.theme=THEMES[S.theme]?S.theme:'leaf';document.documentElement.dataset.scheme=dk?'dark':'light';r.setProperty('--g1',tint(tint(m.c[0],th.g),dg));r.setProperty('--g2',tint(tint(m.c[1],th.g),dg));{const ar=tint(tint(m.c[2],th.a),da),hc=S.a11y.contrast==='high',boxC=hc?(dk?'#000000':'#ffffff'):dk?'#262a35':S.theme==='berry'?'#fff3f7':'#f8f8f8';r.setProperty('--acc',fit(ar,'#ffffff',4.5,'#000000'));r.setProperty('--acc-text',dk?fit(ar,boxC,4.5,'#ffffff'):fit(ar,boxC,4.5,'#000000'))}
    const s=Math.max(0,Math.ceil(left)),mm=String(Math.floor(s/60)).padStart(2,'0'),ss=String(s%60).padStart(2,'0');$('#mm').textContent=mm;$('#ss').textContent=ss;$('#mm').style.fontSize=mm.length>2?'calc(var(--w)*.29)':'';$('#clock').classList.toggle('run',run);document.title=mm+':'+ss+' · Focus Quest';
-   const pc=Math.max(0,Math.min(100,left/total()*100));$('#hpb').style.width=pc+'%';$('#hpb').style.background=pc>50?'#48d848':pc>20?'#f8d030':'#f85838';$('#hpl').textContent=phase==='focus'?'HP':'ZZZ';$('#badge').textContent=phase==='focus'?'FOCUS':'REST';
-   say(quip(phase+run,m));
+   const pc=Math.max(0,Math.min(100,left/total()*100));$('#hpb').style.width=pc+'%';$('#hpb').style.background=pc>50?'#48d848':pc>20?'#f8d030':'#f85838';$('#hpl').textContent=phase==='focus'?'TIME LEFT':'BREAK LEFT';{const hp=$('.hp[role=progressbar]');hp.setAttribute('aria-valuenow',Math.round(pc));hp.setAttribute('aria-valuetext',`${+mm} minutes ${+ss} seconds left`);$('#clock').setAttribute('aria-label',`Time remaining: ${+mm} minutes ${+ss} seconds. ${phase==='focus'?'Focus':'Break'} ${run?'running':'paused'}`)}$('#badge').textContent=phase==='focus'?'FOCUS':'REST';
+   say(quip(phase+run,m));{const ak=phase+run;if(annKey!==null&&annKey!==ak)announce(run?(phase==='focus'?`Focus started. ${Math.round(total()/60)} minutes.`:'Break started.'):(annKey.endsWith('true')?'Paused.':phase==='focus'?'Ready to focus.':'Break ready.'));annKey=ak}
    $('#plabel').textContent=run?'PAUSE':(phase==='break'||left<total()?'RESUME':'START');
    $('#msel').value=S.mode}
   const M={};
@@ -164,7 +168,7 @@ export function initApp() {
     if(!M.l&&t>=180&&left<=60){M.l=1;talk('Last minute! Almost there.',4,2)}}
    else{if(!M.h&&t>=360&&left<=t/2){M.h=1;talk('Break is halfway done.',3.5,2)}
     if(!M.l&&t>=120&&left<=60){M.l=1;talk('One minute left. Get ready!',3.5,2)}}}
-  function loop(){left=(endAt-Date.now())/1000;if(left<=0){left=0;run=false;clearInterval(tick);done();phase=phase==='focus'?'break':'focus';left=total();for(const k in M)delete M[k];react('done')}else mile();ui()}
+  function loop(){left=(endAt-Date.now())/1000;if(left<=0){left=0;run=false;clearInterval(tick);done();phase=phase==='focus'?'break':'focus';left=total();for(const k in M)delete M[k];react('done');annKey=phase+run;announce(phase==='break'?'Focus session finished. Time for a break.':'Break over. Ready to focus.')}else mile();ui()}
   function toggle(){click();if(run){run=false;clearInterval(tick);react('pause')}else{const t=total();if(left<t/2-2)M.h=1;if(left<298)M.f=1;if(left<58)M.l=1;run=true;endAt=Date.now()+left*1000;tick=setInterval(loop,250);react('play')}ui()}
   function reset(full=true){clearInterval(tick);run=false;if(full)phase='focus';left=total();for(const k in M)delete M[k];ui()}
   $('#play').onclick=toggle;$('#reset').onclick=()=>{click();reset()};$('#skip').onclick=()=>{click();phase=phase==='focus'?'break':'focus';reset(false);react('skip')};
@@ -173,31 +177,34 @@ export function initApp() {
 
   /* ---- calendar ---- */
   let vd=new Date();vd.setDate(1);
-  function cal(){const t=new Date(),y=vd.getFullYear(),m=vd.getMonth();$('#cm').textContent=vd.toLocaleString(undefined,{month:'short',year:'numeric'}).toUpperCase();
-   let h='SMTWTFS'.split('').map(d=>`<div class="text-[9px] opacity-70">${d}</div>`).join('');
-   for(let i=0;i<vd.getDay();i++)h+='<div></div>';
-   for(let d=1;d<=new Date(y,m+1,0).getDate();d++)h+=`<div class="day ${t.getFullYear()==y&&t.getMonth()==m&&t.getDate()==d?'today':''}">${d}</div>`;$('#cal').innerHTML=h}
+  function cal(){const t=new Date(),y=vd.getFullYear(),m=vd.getMonth(),first=vd.getDay(),days=new Date(y,m+1,0).getDate();
+   $('#cm').textContent=vd.toLocaleString(undefined,{month:'long',year:'numeric'}).toUpperCase();
+   const names=[...Array(7)].map((_,i)=>new Date(2023,0,1+i).toLocaleDateString(undefined,{weekday:'long'}));
+   let h='<table class="caltab"><thead><tr>'+names.map(n=>`<th scope="col"><abbr title="${n}">${n[0].toUpperCase()}</abbr></th>`).join('')+'</tr></thead><tbody>';
+   let d=1-first;for(let r=0;r<Math.ceil((first+days)/7);r++){h+='<tr>';for(let c=0;c<7;c++,d++){const today=d>=1&&d<=days&&t.getFullYear()==y&&t.getMonth()==m&&t.getDate()==d;h+=d<1||d>days?'<td></td>':`<td><span class="day ${today?'today':''}"${today?' aria-current="date"':''}>${d}</span></td>`}h+='</tr>'}
+   $('#cal').innerHTML=h+'</tbody></table>'}
   $('#pm').onclick=()=>{click();vd.setMonth(vd.getMonth()-1);cal()};$('#nm').onclick=()=>{click();vd.setMonth(vd.getMonth()+1);cal()};
 
   /* ---- tasks ---- */
   const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   function tasks(){const a=S.tasks.filter(t=>!t.done);
-   $('#tl').innerHTML=a.length?a.map(t=>`<li class="flex items-center gap-2"><span class="chk" data-id="${t.id}" role="checkbox" aria-checked="false" tabindex="0"></span><span class="flex-1 break-words">${esc(t.text)}</span><button data-del="${t.id}" aria-label="Delete">✕</button></li>`).join(''):'<li class="opacity-70">No missions yet. Add one above!</li>';
+   $('#tl').innerHTML=a.length?a.map(t=>`<li class="flex items-center gap-2"><button type="button" class="chk" role="checkbox" aria-checked="false" data-id="${t.id}" aria-label="Mark as done: ${esc(t.text)}"></button><span class="flex-1 break-words">${esc(t.text)}</span><button type="button" class="delbtn" data-del="${t.id}" aria-label="Delete mission: ${esc(t.text)}"><span aria-hidden="true">✕</span></button></li>`).join(''):'<li class="hint">No missions yet. Type one above and press Enter.</li>';
    const g={};S.tasks.filter(t=>t.done).sort((x,y)=>y.at-x.at).forEach(t=>{const d=new Date(t.at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});(g[d]=g[d]||[]).push(t)});
-   $('#his').innerHTML=Object.keys(g).length?Object.entries(g).map(([d,l])=>`<h4 class="mt-3 mb-1" style="color:var(--acc)">${d}</h4><ul class="space-y-2">${l.map(t=>`<li class="flex gap-2 items-center"><span class="chk d">✓</span><span class="opacity-70 line-through">${esc(t.text)}</span></li>`).join('')}</ul>`).join(''):'<p class="opacity-70">Cleared missions show up here by date.</p>'}
-  function add(){const v=$('#ti').value.trim();if(!v)return;click();S.tasks.push({id:Date.now()+Math.random(),text:v,done:false});$('#ti').value='';save();tasks()}
+   $('#his').innerHTML=Object.keys(g).length?Object.entries(g).map(([d,l])=>`<h3 class="mt-3 mb-2" style="color:var(--acc-text)">${d}</h3><ul class="space-y-2">${l.map(t=>`<li class="flex gap-2 items-center"><span class="chk d" aria-hidden="true">✓</span><span class="line-through"><span class="sr-only">Completed: </span>${esc(t.text)}</span></li>`).join('')}</ul>`).join(''):'<p class="hint">Completed missions show up here, grouped by day.</p>'}
+  function add(){const v=$('#ti').value.trim();if(!v)return;click();S.tasks.push({id:Date.now()+Math.random(),text:v,done:false});$('#ti').value='';save();tasks();announce('Mission added: '+v)}
   $('#ta').onclick=add;$('#ti').onkeydown=e=>{if(e.key==='Enter')add()};
   $('#tl').onclick=e=>{const c=e.target.closest('[data-id]'),d=e.target.closest('[data-del]');
-   if(c){const r=c.getBoundingClientRect(),t=S.tasks.find(t=>t.id==c.dataset.id);t.done=true;t.at=t.u=Date.now();check();react('task',r.left+r.width/2);save();tasks()}
-   if(d){click();S.tasks=S.tasks.filter(t=>t.id!=d.dataset.del);save();tasks()}};
-  function tabs(n){click();$('#act').classList.toggle('hidden',n!=1);$('#his').classList.toggle('hidden',n!=2);$('#t1').classList.toggle('on',n==1);$('#t2').classList.toggle('on',n==2)}
+   const refocus=()=>($('#tl .chk')||$('#ti')).focus();
+   if(c){const r=c.getBoundingClientRect(),t=S.tasks.find(t=>t.id==c.dataset.id);t.done=true;t.at=t.u=Date.now();check();react('task',r.left+r.width/2);save();tasks();announce('Mission completed: '+t.text);refocus()}
+   if(d){const t=S.tasks.find(t=>t.id==d.dataset.del);click();S.tasks=S.tasks.filter(t=>t.id!=d.dataset.del);save();tasks();announce('Mission deleted: '+(t?t.text:''));refocus()}};
+  function tabs(n){click();$('#act').classList.toggle('hidden',n!=1);$('#his').classList.toggle('hidden',n!=2);$('#t1').classList.toggle('on',n==1);$('#t2').classList.toggle('on',n==2);$('#t1').setAttribute('aria-selected',n==1);$('#t2').setAttribute('aria-selected',n==2)}
   $('#t1').onclick=()=>tabs(1);$('#t2').onclick=()=>tabs(2);
 
   /* ---- settings & about ---- */
   function tile(k,p){const f=p.idle[0],c=f%p.cols,r=Math.floor(f/p.cols),s=p.tz||Math.min(1.2,56/p.cw,62/p.ch);
    return `<button class="tile ${S.pet===k?'on':''}" data-pet="${k}"><i style="width:${p.cw*s}px;height:${p.ch*s}px;background-image:url(${p.src});background-size:${p.cols*p.cw*s}px ${p.rows*p.ch*s}px;background-position:-${c*p.cw*s}px -${r*p.ch*s}px"></i>${p.n||'MINE'}</button>`}
-  function settings(){thUI();$('#durs').innerHTML='<span></span><span class="h">FOCUS</span><span class="h">REST</span>'+Object.entries(MODES).map(([k,m])=>`<span>${m.n}</span><input type="number" min="1" max="240" data-k="${k}" data-p="f" value="${dur(k).f}"><input type="number" min="1" max="120" data-k="${k}" data-p="b" value="${dur(k).b}">`).join('');
-   $('#snd').textContent=S.snd?'ON':'OFF';$('#snd').classList.toggle('on',S.snd);$('#vol').value=S.vol;
+  function settings(){thUI();a11yUI();tkUI();$('#durs').innerHTML='<span></span><span class="h">FOCUS</span><span class="h">REST</span>'+Object.entries(MODES).map(([k,m])=>`<span>${m.n}</span><input type="number" min="1" max="240" data-k="${k}" data-p="f" aria-label="${m.n} focus minutes" value="${dur(k).f}"><input type="number" min="1" max="120" data-k="${k}" data-p="b" aria-label="${m.n} rest minutes" value="${dur(k).b}">`).join('');
+   $('#snd').textContent=S.snd?'ON':'OFF';$('#snd').classList.toggle('on',S.snd);$('#snd').setAttribute('aria-pressed',S.snd);$('#vol').value=S.vol;
    const pe=Object.entries(PETS);$('#pets').innerHTML=pe.filter(([k])=>!k.startsWith('sg')).map(([k,p])=>tile(k,p)).join('')+(S.custom?tile('custom',S.custom):'');$('#pets2').innerHTML=pe.filter(([k])=>k.startsWith('sg')).map(([k,p])=>tile(k,p)).join('');keysUI()}
   document.querySelectorAll('#pets,#pets2').forEach(g=>g.onclick=e=>{const b=e.target.closest('[data-pet]');if(!b)return;S.pet=b.dataset.pet;save();click();size();settings()});
   const open=(id,v)=>{binding=null;$(id).classList.toggle('open',v);const sb=$(id+' .sb');if(v&&sb)sb.scrollTop=0};
@@ -209,7 +216,7 @@ export function initApp() {
   $('#cs').onclick=()=>{const f=$('#cf').files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const cols=+$('#cc').value||1,rows=+$('#cr').value||1,l=s=>s.split(',').map(n=>+n.trim()).filter(n=>!isNaN(n)&&n>=0),idle=l($('#cid').value),w=l($('#cwk').value);
     S.custom={n:'MINE',src:r.result,cols,rows,cw:im.width/cols,ch:im.height/rows,face:+$('#cfc').value,walk:w.length?w:idle,idle:idle.length?idle:[0],sleep:l($('#csl').value),jump:l($('#cj').value),happy:idle,groom:idle,wave:idle,stretch:idle};
     if(S.custom.jump.length<3)S.custom.jump=[idle[0]||0,idle[0]||0,idle[0]||0];S.pet='custom';save();size();settings();click()};im.src=r.result};r.readAsDataURL(f)};
-  $('#rs').onclick=()=>{if(confirm('Delete tasks, settings and custom sprite?')){['focusquest','fq_cover','fq_custom','fq_garden'].forEach(k=>localStorage.removeItem(k));try{indexedDB.deleteDatabase('focusquest')}catch(e){}location.reload()}};
+  $('#rs').onclick=async()=>{if(await ask('This deletes your missions, settings, banners, tiles and garden on this device. It cannot be undone.','DELETE ALL','RESET ALL DATA')){['focusquest','fq_cover','fq_custom','fq_garden'].forEach(k=>localStorage.removeItem(k));try{indexedDB.deleteDatabase('focusquest')}catch(e){}location.reload()}};
   document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>e.target===m&&m.classList.remove('open'));
   addEventListener('resize',()=>{size();ledges()});
   /* ---- keyboard shortcuts (configurable; paused while typing or in dialogs) ---- */
@@ -217,7 +224,7 @@ export function initApp() {
   const mnItems=()=>[...document.querySelectorAll('#mlist .mi')];let mnI=0;
   const mnSet=i=>{const a=mnItems();mnI=(i+a.length)%a.length;a.forEach((b,n)=>b.classList.toggle('on',n===mnI))};
   $('#mlist').addEventListener('mouseover',e=>{const b=e.target.closest('.mi');if(b)mnSet(mnItems().indexOf(b))});
-  $('#mlist').addEventListener('click',e=>{const b=e.target.closest('.mi');if(!b)return;if(b.id==='mth'){click();themeNext();return}if(b.id==='mdk'){click();schemeNext();return}open('#mnu',0);const go=b.dataset.go;if(go)$(go).click()});
+  $('#mlist').addEventListener('click',e=>{const b=e.target.closest('.mi');if(!b)return;if(b.id==='mth'){click();themeNext();return}if(b.id==='mdk'){click();schemeNext();return}if(b.id==='mks'){click();open('#mnu',0);settings();open('#ms',1);setTimeout(()=>{const k=$('#keys');if(k)k.scrollIntoView({block:'start'})},60);return}open('#mnu',0);const go=b.dataset.go;if(go)$(go).click()});
   $('#bm').onclick=()=>{click();mnSet(0);thUI();open('#mnu',1)};
   addEventListener('keydown',e=>{if(!$('#mnu').classList.contains('open'))return;
    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();click();mnSet(mnI+(e.key==='ArrowDown'?1:-1))}
@@ -233,20 +240,22 @@ export function initApp() {
    $('#keys').innerHTML=Object.keys(ACT).map(a=>`<div class="row"><span>${ACT[a]}</span><button class="gb sm ${binding===a?'on':''}" data-a="${a}" style="min-width:92px">${binding===a?'PRESS KEY':kn(S.keys[a])}</button></div>`).join('');hints()}
   $('#keys').onclick=e=>{const b=e.target.closest('[data-a]');if(b){click();binding=b.dataset.a;keysUI()}};
   $('#kbt').onclick=()=>{S.kb=!S.kb;save();click();keysUI()};$('#kbr').onclick=()=>{S.keys={...DK};save();click();keysUI()};
+  const nativeActivate=t=>t.closest&&t.closest('button,a[href],[role=button],[role=checkbox],[role=tab],[role=menuitem],summary');
   const typing=t=>t.closest&&t.closest('input,textarea,select,[contenteditable]');
   addEventListener('keydown',e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;
    if(binding){e.preventDefault();if(k==='Escape'){binding=null;keysUI();return}if(['Shift','Control','Alt','Meta'].includes(k))return;
     const old=S.keys[binding];for(const a in S.keys)if(S.keys[a]===k&&a!==binding)S.keys[a]=old;S.keys[binding]=k;binding=null;save();keysUI();return}
-   if(k==='Escape'){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));return}
+   if(k==='Escape'){const o=[...document.querySelectorAll('.modal.open')];if(o.length)o[o.length-1].classList.remove('open');return}
    if(!S.kb||e.ctrlKey||e.metaKey||e.altKey||e.repeat||typing(e.target)||document.querySelector('.modal.open,.amodal.open'))return;
+   if(k===' '&&nativeActivate(e.target))return; // Space must still press a focused button
    const a=Object.keys(S.keys).find(a=>S.keys[a]===k);if(a&&ACTS[a]){e.preventDefault();ACTS[a]()}});
-  addEventListener('keyup',e=>{if(S.kb&&e.key===' '&&S.keys.play===' '&&!typing(e.target))e.preventDefault()});
+  addEventListener('keyup',e=>{if(S.kb&&e.key===' '&&S.keys.play===' '&&!typing(e.target)&&!nativeActivate(e.target))e.preventDefault()});
   /* ---- banner library (IndexedDB keeps uploads and history) ---- */
   const DB=new Promise(res=>{try{const q=indexedDB.open('focusquest',2);q.onupgradeneeded=()=>{const d=q.result;['banners','tiles'].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)}catch(e){res(null)}});
   const idb=(m,fn,st='banners')=>DB.then(db=>db?new Promise(r=>{try{const t=db.transaction(st,m),q=fn(t.objectStore(st));t.oncomplete=()=>r(q&&q.result);t.onerror=t.onabort=()=>r(null)}catch(e){r(null)}}):null);
   const BN=[],bmsg=t=>$('#bmsg').textContent=t;
   function cover(){const b=BN.find(x=>x.id===S.banner),none=S.banner==='none';$('#bento').classList.toggle('nocover',none);$('#cov').style.backgroundImage=b?`url(${b.url})`:'none';$('#ban').classList.toggle('empty',!b&&!none);$('#addcov').style.display=none?'':'none'}
-  function bnUI(){$('#bgrid').innerHTML=BN.length?BN.map(b=>`<div class="bt ${b.id===S.banner?'on':''}" data-b="${b.id}" title="${esc(b.name)}"><i style="background-image:url(${b.url})"></i><button class="gb" data-bdel="${b.id}" aria-label="Delete banner">✕</button></div>`).join(''):'<p class="opacity-70 col-span-full">No banners yet. Upload one!</p>'}
+  function bnUI(){$('#bgrid').innerHTML=BN.length?BN.map(b=>`<div class="bt ${b.id===S.banner?'on':''}" data-b="${b.id}" title="${esc(b.name)}"><i style="background-image:url(${b.url})"></i><button class="gb" data-bdel="${b.id}" aria-label="Delete banner">✕</button></div>`).join(''):'<p class="opacity-[.86] col-span-full">No banners yet. Upload one!</p>'}
   async function bnLoad(){const rows=await idb('readonly',s=>s.getAll());(rows||[]).sort((a,b)=>b.at-a.at).forEach(r=>{r.url=URL.createObjectURL(r.blob);BN.push(r)});cover();bnUI()}
   function bnDel(id,quiet){const i=BN.findIndex(b=>b.id===id);if(i<0)return;URL.revokeObjectURL(BN[i].url);BN.splice(i,1);idb('readwrite',s=>s.delete(id));if(S.banner===id){S.banner='default';save()}if(!quiet){cover();bnUI()}}
   async function bnAdd(f){if(!f)return;if(!f.type.startsWith('image/')){bmsg('Please choose an image file.');return}if(f.size>15e6){bmsg('That file is over 15 MB. Try a smaller one.');return}
@@ -265,7 +274,7 @@ export function initApp() {
   /* ---- pick up the buddy: it lands on the nearest surface below, otherwise falls to the ground ---- */
   const dm=$('#dm');let drag=null,jd=false;
   function dropTarget(){ledges();return L.filter(l=>l.id!=='floor'&&P.x>=l.x1-6&&P.x<=l.x2+6&&l.y>=P.y-14).sort((a,b)=>a.y-b.y)[0]||L[L.length-1]}
-  el.onclick=()=>{if(jd){jd=false;return}meow();react('pet')};
+  el.onclick=()=>{if(jd){jd=false;return}meow();react('pet');buddyTalk()};
   el.addEventListener('pointerdown',e=>{if(e.button>0)return;try{el.setPointerCapture(e.pointerId)}catch(_){}drag={id:e.pointerId,sx:e.clientX,sy:e.clientY,moved:false}});
   el.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;
    if(!drag.moved){if(Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6)return;drag.moved=true;P.st='held';P.t=0;P.pend=null;P.jt=null;P.after=null;talk(pick(['Whoa!','Put me down!','Wheee!']),1.5,3)}
@@ -320,13 +329,13 @@ export function initApp() {
   gcv.addEventListener('mousedown',e=>{if(e.button===1)e.preventDefault()});
   $('#gzm').onclick=()=>{click();gzoom(-1)};$('#gzp').onclick=()=>{click();gzoom(1)};
   $('#ggr').onclick=()=>{click();G.grid=!G.grid;gd()};$('#gce').onclick=()=>{click();G.cx=GW*TS/2;G.cy=GH*TS/2;gd()};
-  $('#gcl').onclick=()=>{if(confirm('Clear the whole garden?')){G.cells.clear();gsave();click();gd()}};
+  $('#gcl').onclick=async()=>{if(await ask('Remove everything you have placed in the garden?','CLEAR GARDEN','CLEAR GARDEN?')){G.cells.clear();gsave();click();gd()}};
   const toolUI=()=>document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===G.tool));
   document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{click();G.tool=b.dataset.tool;toolUI();gd()});
   const thumb=(it,m)=>{const s=Math.min(3,m/Math.max(it.w,it.h)),b=`width:${it.w*s}px;height:${it.h*s}px;`;return it.img?b+`background-image:url(${it.url});background-size:100% 100%`:b+`background-size:${AW*s}px ${AH*s}px;background-position:-${it.x*s}px -${it.y*s}px`};
   function gpal(){if(!cats().includes(G.cat))G.cat='NATURE';
    $('#gtb').innerHTML=cats().map(c=>`<button class="gb sm ${G.cat===c?'on':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
-   $('#gpal').innerHTML=[...BI,...CT].filter(i=>i.cat===G.cat).map(i=>`<button class="gt ${G.sel===i.id?'on':''}" data-i="${i.id}" title="${esc(i.name||'')}" aria-label="${esc(i.name||'Sprite '+i.id)}"><i style="${thumb(i,40)}"></i></button>`).join('')||'<span class="text-[8px] opacity-70">Nothing here yet. Add tiles in the Tile Manager.</span>'}
+   $('#gpal').innerHTML=[...BI,...CT].filter(i=>i.cat===G.cat).map(i=>`<button class="gt ${G.sel===i.id?'on':''}" data-i="${i.id}" title="${esc(i.name||'')}" aria-label="${esc(i.name||'Sprite '+i.id)}"><i style="${thumb(i,40)}"></i></button>`).join('')||'<span class="text-[length:calc(10px*var(--ts))] opacity-[.86]">Nothing here yet. Add tiles in the Tile Manager.</span>'}
   $('#gtb').onclick=e=>{const b=e.target.closest('[data-cat]');if(b){click();G.cat=b.dataset.cat;gpal()}};
   $('#gpal').onclick=e=>{const b=e.target.closest('[data-i]');if(b){click();G.sel=/^\d+$/.test(b.dataset.i)?+b.dataset.i:b.dataset.i;G.tool='paint';toolUI();gpal();gd()}};
 
@@ -342,7 +351,7 @@ export function initApp() {
    await Promise.all(CT.map(it=>it.img.complete?1:new Promise(r=>{it.img.addEventListener('load',r,{once:true});it.img.addEventListener('error',r,{once:true})})));dtoReady=true;dtoPrint('page load')}
   const TM={sel:null,crop:null},tcur=()=>CTM.get(TM.sel),tmsg=t=>$('#tmmsg').textContent=t,upCat=v=>(v||'CUSTOMS').toUpperCase().trim().slice(0,14)||'CUSTOMS';
   function tmUI(){const g=$('#tmg');$('#tcats').innerHTML=cats().map(c=>`<option value="${esc(c)}">`).join('');
-   if(!CT.length){g.innerHTML='<p class="opacity-70">No custom tiles yet. Upload tiles or import a sprite sheet.</p>';$('#tme').style.display='none';return}
+   if(!CT.length){g.innerHTML='<p class="opacity-[.86]">No custom tiles yet. Upload tiles or import a sprite sheet.</p>';$('#tme').style.display='none';return}
    const gr={};CT.forEach(t=>(gr[t.cat]=gr[t.cat]||[]).push(t));
    g.innerHTML=Object.entries(gr).map(([c,l])=>`<div class="tmh">${esc(c)} (${l.length})</div><div class="cbar">${l.map(t=>`<button class="gt ${t.id===TM.sel?'on':''}" data-t="${t.id}" title="${esc(t.name)}" aria-label="${esc(t.name)}"><i style="${thumb(t,40)}"></i></button>`).join('')}</div>`).join('');
    const it=tcur();$('#tme').style.display=it?'':'none';if(it){if(document.activeElement!==$('#ten'))$('#ten').value=it.name;if(document.activeElement!==$('#tcat'))$('#tcat').value=it.cat;$('#tmo').value=it.mode;tdraw()}}
@@ -364,7 +373,7 @@ export function initApp() {
   $('#tmg').onclick=e=>{const b=e.target.closest('[data-t]');if(b){click();TM.sel=b.dataset.t;TM.crop=null;tmUI()}};
   function tmv(d){const it=tcur();if(!it)return;click();const i=CT.indexOf(it);let j=i+d;while(j>=0&&j<CT.length&&CT[j].cat!==it.cat)j+=d;if(j<0||j>=CT.length)return;[CT[i],CT[j]]=[CT[j],CT[i]];CT.forEach((t,n)=>{if(t.order!==n+1){t.order=n+1;ctPut(t,false)}});tmUI();gpal()}
   $('#tml').onclick=()=>tmv(-1);$('#tmr').onclick=()=>tmv(1);
-  $('#tdl').onclick=()=>{const it=tcur();if(!it||!confirm('Delete this tile and remove it from the garden?'))return;click();CT.splice(CT.indexOf(it),1);CTM.delete(it.id);URL.revokeObjectURL(it.url);idb('readwrite',s=>s.delete(it.id),'tiles');
+  $('#tdl').onclick=async()=>{const it=tcur();if(!it||!(await ask('Delete this tile and remove it from the garden?','DELETE TILE','DELETE TILE?')))return;click();CT.splice(CT.indexOf(it),1);CTM.delete(it.id);URL.revokeObjectURL(it.url);idb('readwrite',s=>s.delete(it.id),'tiles');
    for(const[k,a]of[...G.cells]){const n=a.filter(x=>x!==it.id);if(n.length!==a.length){if(n.length)G.cells.set(k,n);else G.cells.delete(k)}}gsave();if(G.sel===it.id)G.sel=-1;TM.sel=null;tmUI();gpal();gd()};
   const tpos=e=>{const it=tcur(),b=$('#tec').getBoundingClientRect();return[Math.max(0,Math.min(it.w,Math.round((e.clientX-b.left)*it.w/b.width))),Math.max(0,Math.min(it.h,Math.round((e.clientY-b.top)*it.h/b.height)))]};
   let tcs=null;const tec=$('#tec');
@@ -468,7 +477,7 @@ export function initApp() {
   $('#pxbs').onchange=e=>PX.bs=+e.target.value;
   $('#pxfl').onclick=e=>{click();PX.fill=!PX.fill;e.target.classList.toggle('on',PX.fill);e.target.textContent='RECT FILL: '+(PX.fill?'ON':'OFF')};
   $('#pxtm').onclick=e=>{click();PX.trim=!PX.trim;e.target.classList.toggle('on',PX.trim);e.target.textContent='TRIM EDGES: '+(PX.trim?'ON':'OFF')};
-  $('#pxcl').onclick=()=>{if(confirm('Clear the canvas?')){pxsnap();pxctx().clearRect(0,0,PX.w,PX.h);pxd();pxdraft()}};
+  $('#pxcl').onclick=async()=>{if(await ask('Clear the whole canvas? You can undo this.','CLEAR CANVAS','CLEAR CANVAS?')){pxsnap();pxctx().clearRect(0,0,PX.w,PX.h);pxd();pxdraft()}};
   $('#pxu').onclick=()=>{click();pxundo(false)};$('#pxr').onclick=()=>{click();pxundo(true)};
   const pxz=d=>{const v=$('#pxview').getBoundingClientRect();pxzoomAt(PX.z+d,v.left+v.width/2,v.top+v.height/2)};$('#pxzm').onclick=()=>{click();pxz(-1)};$('#pxzp').onclick=()=>{click();pxz(1)};
   $('#pxgr').onclick=()=>{click();PX.grid=!PX.grid;pxd()};
@@ -490,7 +499,7 @@ export function initApp() {
   /* layers: 1 = reference image (under), 2 = drawing (on top); each can be hidden */
   function pxset(k){PX.tool=k;PX.layer=k==='ref'?'ref':'draw';pxtool();layerUI()}
   function layerUI(){$('#lyre').classList.toggle('off',!PX.refShow);$('#lyde').classList.toggle('off',!PX.drawShow);
-   document.querySelectorAll('[data-ly]').forEach(l=>l.classList.toggle('on',l.dataset.ly===PX.layer));$('#lyrs').textContent='IMAGE · '+(PX.ref?(PX.refShow?'loaded':'hidden'):'none')}
+   document.querySelectorAll('[data-ly]').forEach(l=>l.classList.toggle('on',l.dataset.ly===PX.layer));document.querySelectorAll('.lyrsel').forEach(b=>b.setAttribute('aria-pressed',b.closest('[data-ly]').dataset.ly===PX.layer));$('#lyrs').textContent='IMAGE · '+(PX.ref?(PX.refShow?'loaded':'hidden'):'none')}
   $('#lyre').onclick=e=>{e.stopPropagation();click();PX.refShow=!PX.refShow;layerUI();pxd()};
   $('#lyde').onclick=e=>{e.stopPropagation();click();PX.drawShow=!PX.drawShow;layerUI();pxd()};
   const lyPick=l=>{click();if(l==='ref'){if(!PX.ref)pxmsg('Layer 1 holds a reference image. Press LOAD to add one.');pxset('ref')}else pxset(PX.tool==='ref'?'pencil':PX.tool)};
@@ -508,6 +517,51 @@ export function initApp() {
   new ResizeObserver(()=>{const v=$('#gview');gcv.width=v.clientWidth;gcv.height=v.clientHeight;gd()}).observe($('#gview'));
   $('#bg').onclick=()=>{click();$('#gzl').textContent=G.z+'x';open('#mg',1);toolUI();gpal();gd()};
   addEventListener('keydown',e=>{if($('#mg').classList.contains('open')&&e.key===' '&&!typing(e.target)){G.space=true;e.preventDefault()}});addEventListener('keyup',e=>{if(e.key===' ')G.space=false});
+  /* ---- accessibility settings: font, text size, contrast, motion ---- */
+  const A11Y={font:{id:'a11yfont',o:{pixel:'PIXEL',readable:'READABLE'}},text:{id:'a11ytext',o:{normal:'NORMAL',l:'LARGE',xl:'EXTRA'}},contrast:{id:'a11ycon',o:{normal:'NORMAL',high:'HIGH'}},motion:{id:'a11ymo',o:{auto:'AUTO',reduced:'REDUCED',full:'FULL'}}};
+  function reducedMotion(){const m=document.documentElement.dataset.motion;return m==='reduced'||(m!=='full'&&matchMedia('(prefers-reduced-motion: reduce)').matches)}
+  function applyA11y(){const d=document.documentElement.dataset,a=S.a11y;d.font=a.font==='readable'?'readable':'pixel';d.text=a.text;d.contrast=a.contrast;d.motion=a.motion;
+   if(a.font==='readable'&&!document.getElementById('fq-readable-font')){const l=document.createElement('link');l.id='fq-readable-font';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap';document.head.appendChild(l)}ui()}
+  function a11yUI(){for(const k in A11Y){const e=$('#'+A11Y[k].id);if(e)e.innerHTML=Object.entries(A11Y[k].o).map(([v,l])=>`<button class="gb sm ${S.a11y[k]===v?'on':''}" data-a="${k}:${v}" aria-pressed="${S.a11y[k]===v}">${l}</button>`).join('')}}
+  Object.values(A11Y).forEach(g=>{$('#'+g.id).onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;const[k,v]=b.dataset.a.split(':');click();S.a11y[k]=v;save();applyA11y();a11yUI()}});
+  matchMedia('(prefers-reduced-motion: reduce)').addEventListener&&matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',()=>{ui()});
+  /* announcements for screen readers (polite live region in the Buddy component) */
+  function announce(m){const e=$('#sr');if(!e)return;e.textContent='';setTimeout(()=>{e.textContent=m},60)}
+  /* ---- in-app confirm dialog (replaces window.confirm) ---- */
+  let pendingAsk=null;
+  function ask(msg,yes='CONFIRM',title='ARE YOU SURE?'){if(pendingAsk)pendingAsk(false);return new Promise(res=>{$('#mcft').textContent=title;$('#mcfm').textContent=msg;$('#mcfy').textContent=yes;
+   const done=v=>{pendingAsk=null;open('#mcf',0);res(v)};pendingAsk=res;$('#mcfy').onclick=()=>{click();done(true)};$('#mcfn').onclick=()=>{click();done(false)};open('#mcf',1)})}
+  /* ---- dialog accessibility: inert background, focus in and back out, Tab trap, scroll lock ---- */
+  {let trigger=null,top=null,count=0;
+   const focusables=m=>[...m.querySelectorAll('button:not([disabled]),[href],input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(e=>e.offsetParent!==null||e===document.activeElement);
+   const sync=()=>{const open=[...document.querySelectorAll('.modal.open')],n=open.length+(document.querySelector('.amodal.open')?1:0);
+    ['.frame','#pet','.skip'].forEach(s=>document.querySelectorAll(s).forEach(e=>n?e.setAttribute('inert',''):e.removeAttribute('inert')));
+    document.body.style.overflow=n?'hidden':'';
+    if(n&&!count)trigger=document.activeElement;
+    const tp=open[open.length-1]||null;
+    if(tp&&tp!==top){const f=tp.querySelector('[data-autofocus],.mi.on,.sb input:not([type=hidden]):not([type=file]),.sb select,.sb button,button');requestAnimationFrame(()=>(f||tp).focus())}
+    top=tp;if(!n&&count&&trigger&&document.contains(trigger))requestAnimationFrame(()=>trigger.focus());count=n;
+    if(pendingAsk&&!$('#mcf').classList.contains('open')){const r=pendingAsk;pendingAsk=null;r(false)}};
+   new MutationObserver(sync).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+   addEventListener('keydown',e=>{if(e.key!=='Tab')return;const o=[...document.querySelectorAll('.modal.open')];if(!o.length)return;const m=o[o.length-1],f=focusables(m);if(!f.length){e.preventDefault();return}const a=f[0],z=f[f.length-1];
+    if(!m.contains(document.activeElement)){e.preventDefault();a.focus()}else if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}},true)}
+  /* ---- buddy facts and jokes: hover, focus, tap or Enter; fresh ones come from public APIs (see src/data/funFacts.js) ---- */
+  let tkTimer=null,tkBusy=false,tkLast=null,tkAt=0,tkSeq=0;
+  function tkUI(){const on=$('#tkon');if(on){on.textContent=S.talk.on?'ON':'OFF';on.classList.toggle('on',S.talk.on);on.setAttribute('aria-pressed',S.talk.on)}
+   const m=$('#tkm');if(m)m.innerHTML=[['both','BOTH'],['facts','FACTS'],['jokes','JOKES']].map(([v,l])=>`<button class="gb sm ${S.talk.mode===v?'on':''}" data-tm="${v}" aria-pressed="${S.talk.mode===v}">${l}</button>`).join('')}
+  $('#tkon').onclick=()=>{click();S.talk.on=!S.talk.on;save();tkUI()};
+  $('#tkm').onclick=e=>{const b=e.target.closest('[data-tm]');if(b){click();S.talk.mode=b.dataset.tm;tkLast=null;save();tkUI()}};
+  function showTalk(it,replay){const label=(it.kind==='joke'?'JOKE':'FACT')+(it.offline?' (OFFLINE)':''),full=it.punch?`${it.text}\n${it.punch}`:it.text,dur=Math.min(16,3.5+full.length*.065);
+   if(it.punch&&!replay&&!reducedMotion()){const first=`${label}: ${it.text}`;talk(first,2.6,5);setTimeout(()=>{if(P.bs===first)talk(`${label}: ${full}`,dur,5)},2500)}else talk(`${label}: ${full}`,dur,5);
+   if(!replay)announce(`${label.toLowerCase()}: ${full.replace('\n',' ')}`)}
+  async function buddyTalk(){if(!S.talk.on||drag||tkBusy)return;
+   if(tkLast&&Date.now()-tkAt<20000){showTalk(tkLast,true);return}
+   tkBusy=true;const my=++tkSeq;talk('...',4,5);let it;try{it=await getTalk(S.talk.mode)}finally{tkBusy=false}
+   if(my!==tkSeq)return;tkLast=it;tkAt=Date.now();showTalk(it)}
+  el.addEventListener('pointerenter',e=>{if(e.pointerType==='touch'||drag)return;P.hov=true;clearTimeout(tkTimer);tkTimer=setTimeout(buddyTalk,260)});
+  el.addEventListener('pointerleave',()=>{P.hov=false;clearTimeout(tkTimer);if(P.bt>2)P.bt=2});
+  el.addEventListener('focus',()=>{P.hov=true;buddyTalk()});el.addEventListener('blur',()=>{P.hov=false});
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();meow();react('pet');buddyTalk()}});
   /* ---- backend DTOs: the same data in the shapes documented in README "Backend API reference" ---- */
   // Sprites (built-in ids 1..N, custom ids from 1001), the 2-layer garden grid, tasks and the signed-in user are rebuilt
   // from the live state on demand and printed to the console on every page load. Nothing here is sent anywhere yet.
@@ -528,5 +582,5 @@ export function initApp() {
   function dtoChanged(why){if(!dtoReady||localStorage.getItem('fq_debug_dto')!=='1')return;clearTimeout(dtT);dtT=setTimeout(()=>dtoPrint(why),500)}
   addEventListener('fq:auth-changed',e=>{authUser=e.detail.user||null;if(dtoReady&&e.detail.status!=='checking')dtoPrint('auth '+e.detail.status)});
   window.fq={dto,print:()=>dtoPrint('manual'),dtoVersion:1};
-  cal();tasks();reset();size();keysUI();cover();bnLoad();gpal();ctLoad();layerUI();thUI();requestAnimationFrame(frame);
+  cal();tasks();reset();size();keysUI();cover();bnLoad();gpal();ctLoad();layerUI();thUI();applyA11y();tkUI();requestAnimationFrame(frame);
 }

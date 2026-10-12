@@ -328,7 +328,7 @@ export default function AuthModal() {
     <div className="amodal open" onMouseDown={(e) => e.target === e.currentTarget && closeAuth()}>
       <div className="box sheet authbox" role="dialog" aria-modal="true" aria-labelledby="au-title" ref={dialog}>
         <div className="sh">
-          <h2 className="text-[12px]" id="au-title">
+          <h2 className="text-[length:calc(12px*var(--ts))]" id="au-title">
             {TITLES[view]}
           </h2>
           <button className="gb !px-2 !py-1" type="button" onClick={closeAuth} aria-label="Close">

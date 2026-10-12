@@ -7,7 +7,8 @@ import Tasks from './Tasks';
 // Bento grid: banner + timer on the left, calendar + missions on the right.
 function Dashboard() {
   return (
-    <div className="frame">
+    <main className="frame" id="main">
+      <h1 className="sr-only">Focus Quest</h1>
       <div id="bento">
         <div className="lc">
           <Banner />
@@ -18,7 +19,7 @@ function Dashboard() {
           <Tasks />
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 

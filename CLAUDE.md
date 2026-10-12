@@ -66,6 +66,24 @@ section at the end of `engine/app.js` wires them to the state.
 - If you add a field or a feature that changes sprites, the garden, tasks or users, update the builders, the README tables and the
   seed file (`npm run export:builtin`) in the same change. Never send a client-supplied `user` to the server.
 
+## UI, accessibility and UX rules
+- **Font sizes:** never hard-code a `font-size` in px. In CSS use `calc(10px*var(--ts))`; in Tailwind use
+  `text-[length:calc(10px*var(--ts))]`. `--ts` is the Text size and Readable font multiplier. Keep 10px as the smallest size.
+- **Colours:** text colours come from tokens (`--ink`, `--acc-text`); backgrounds with white text use `--acc`. The engine
+  recomputes `--acc` and `--acc-text` in `ui()` so they stay at 4.5:1 or better in every theme, mode and dark mode. Do not
+  use `--acc` as a text colour on a light panel. Avoid `opacity` below .84 on text.
+- **Interactive elements** must be real `<button>`, `<a>` or form controls (never a clickable `div` or `span`), have an accessible
+  name, and show `:focus-visible` (global ring). Touch targets stay at least 40 px tall (44 px on coarse pointers).
+- **Dialogs** need `role="dialog"` (or `alertdialog`), `aria-modal="true"` and a label. The engine's MutationObserver
+  ("dialog accessibility" section) handles inert background, focus in/out, Tab trap and scroll lock for every `.modal`; just toggle
+  the `open` class. Use `ask()` instead of `window.confirm()`, and `announce()` for screen-reader messages.
+- **Motion:** respect `prefers-reduced-motion` and the in-app Motion setting (`reducedMotion()` in the engine, CSS under
+  `[data-motion]`). Do not rely on animation to convey information.
+- **Shortcuts** must not fire while typing, in dialogs, or when the key natively activates the focused control (Space on a button).
+- **Buddy talk** (`src/data/funFacts.js`): keep requests user-initiated (hover, focus, tap), without cookies or referrer, with a
+  timeout, length cap and offline fallback. Do not add prefetching on page load.
+- **Verify:** after UI changes run an axe-core scan (every dialog, light, dark, high contrast) and exercise keyboard paths.
+
 ## Styling
 - `src/index.css`: design tokens in `:root` (`--g1`, `--g2`, `--acc`, `--box`, `--panel`, `--ink`, `--line`,
   `--edge`, `--bd`, `--r`), then component styles, then the Tailwind layers at the end (this order matches the
