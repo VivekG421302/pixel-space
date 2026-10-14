@@ -351,11 +351,11 @@ export function initApp() {
   function gerase(c,r){const k=r*GW+c,a=G.cells.get(k);if(!a)return false;a.pop();if(!a.length)G.cells.delete(k);return true}
   function gdraw(){gq=false;if(!$('#mg').classList.contains('open')||!AI.complete)return;
    const W=gcv.width,H=gcv.height,z=G.z,ts=TS*z,ox=Math.round(W/2-G.cx*z),oy=Math.round(H/2-G.cy*z);
-   gx.imageSmoothingEnabled=false;gx.fillStyle='#24362c';gx.fillRect(0,0,W,H);
+   gx.imageSmoothingEnabled=false;gx.fillStyle='#86bba5';gx.fillRect(0,0,W,H);
    const c0=Math.max(0,Math.floor(-ox/ts)),c1=Math.min(GW-1,Math.floor((W-ox)/ts)),r0=Math.max(0,Math.floor(-oy/ts)),r1=Math.min(GH-1,Math.floor((H-oy)/ts));
    const put=(id,c,r,al)=>{const it=ITEM(id);if(!it||(it.img&&!it.img.complete))return;const ag=it.mode!=='o',dx=ag?ox+c*ts:ox+Math.round((c*TS+TS/2-it.w/2)*z),dy=ag?oy+r*ts:oy+Math.round(((r+1)*TS-it.h-1)*z);if(al)gx.globalAlpha=al;if(it.img)gx.drawImage(it.img,0,0,it.w,it.h,dx,dy,it.w*z,it.h*z);else gx.drawImage(AI,it.x,it.y,it.w,it.h,dx,dy,it.w*z,it.h*z);if(al)gx.globalAlpha=1};
    const ra=Math.max(0,r0-8),rb=Math.min(GH-1,r1+5),ca=Math.max(0,c0-8),cb=Math.min(GW-1,c1+3);
-   for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++){const h=(c*31+r*17)%37;put(GRS[h===0?1:h===1?2:0],c,r)}
+   {const gi=ITEM(GRS[0]);if(gi)for(let r=Math.floor(-oy/ts);r<=Math.floor((H-oy)/ts);r++)for(let c=Math.floor(-ox/ts);c<=Math.floor((W-ox)/ts);c++)put(GRS[0],c,r)} // base: plain green grass only, edge to edge
    for(let r=ra;r<=r1;r++)for(let c=ca;c<=cb;c++){const a=G.cells.get(r*GW+c);if(a)a.forEach(id=>{if(ITEM(id)?.mode==='g')put(id,c,r)})}
    for(let r=ra;r<=rb;r++)for(let c=ca;c<=cb;c++){const a=G.cells.get(r*GW+c);if(a)a.forEach(id=>{const m=ITEM(id)?.mode;if(m&&m!=='g')put(id,c,r)})}
    if(G.grid){gx.strokeStyle='rgba(255,255,255,.14)';gx.lineWidth=1;gx.beginPath();for(let c=c0;c<=c1+1;c++){gx.moveTo(ox+c*ts+.5,oy+r0*ts);gx.lineTo(ox+c*ts+.5,oy+(r1+1)*ts)}for(let r=r0;r<=r1+1;r++){gx.moveTo(ox+c0*ts,oy+r*ts+.5);gx.lineTo(ox+(c1+1)*ts,oy+r*ts+.5)}gx.stroke()}
@@ -564,6 +564,15 @@ export function initApp() {
    else if(G.over&&$('#mg').classList.contains('open')){e.preventDefault();if(rs)gzoomAt(3-G.z,G.mx,G.my);else gzoomAt(up?1:-1,G.mx,G.my)}},true);
   addEventListener('resize',()=>pxd());
   new ResizeObserver(()=>{const v=$('#gview');gcv.width=v.clientWidth;gcv.height=v.clientHeight;gd()}).observe($('#gview'));
+  /* ---- garden fullscreen ---- */
+  const gfsOn=()=>$('#mg').classList.contains('full');
+  function gfsSet(v){const m=$('#mg'),b=$('#gfs');m.classList.toggle('full',v);b.textContent=v?'EXIT FULL':'FULL';b.setAttribute('aria-pressed',v);
+   if(v){if(m.requestFullscreen&&!document.fullscreenElement){const p=m.requestFullscreen();if(p&&p.catch)p.catch(()=>{})}}
+   else if(document.fullscreenElement&&document.exitFullscreen){const p=document.exitFullscreen();if(p&&p.catch)p.catch(()=>{})}
+   gd()}
+  $('#gfs').onclick=()=>{click();gfsSet(!gfsOn())};
+  document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&gfsOn())gfsSet(false)});
+  new MutationObserver(()=>{if(!$('#mg').classList.contains('open')&&gfsOn())gfsSet(false)}).observe($('#mg'),{attributes:true,attributeFilter:['class']});
   $('#bg').onclick=()=>{click();$('#gzl').textContent=G.z+'x';open('#mg',1);toolUI();gpal();gd()};
   addEventListener('keydown',e=>{if($('#mg').classList.contains('open')&&e.key===' '&&!typing(e.target)){G.space=true;e.preventDefault()}});addEventListener('keyup',e=>{if(e.key===' ')G.space=false});
   /* ---- accessibility settings: font, text size, contrast, motion ---- */

@@ -48,6 +48,13 @@ Every duration can be changed in Settings → Timers. Controls: **Reset**, **Sta
 **Skip** (jump to the next phase). The HP bar drains as time runs out. The page title shows the
 countdown. A chime plays when a phase ends, and the status line shows a random message per state.
 
+**Auto mode** (the **AUTO** button under the controls, or Settings → Timers) runs the selected mode as a continuous
+cycle: focus, a 5 second chime, break, a 5 second chime, then focus again, and so on (25 / 5 minutes in Pomodoro).
+Turning it on starts the timer; turning it off lets the current phase finish and stop as usual.
+
+**Picture in picture:** the **PIP** button pops the clock out into a small always-on-top window with Start / Pause and
+Skip buttons (Document Picture-in-Picture in Chrome and Edge; a video-based PiP in browsers that only support that).
+
 ### Missions (tasks) and calendar
 - Add a mission with the input box (Enter or `+`). Tick it to complete it with a two-tone chime.
 - **History** groups completed missions by completion date.
@@ -86,6 +93,10 @@ A 128 × 256 tile ground to decorate. Open it from the dock, the menu, or `G`.
   filled tile stacks on top; placing on a full tile replaces the top layer.
 - **Zoom** with `Ctrl` + mouse wheel, `Ctrl +` / `Ctrl -` (with the pointer over the canvas), or the
   +/- buttons. `Ctrl 0` resets. The garden saves automatically.
+- **Full screen:** the **Full** button fills the screen (browser fullscreen where supported, otherwise the whole viewport).
+- **Layout:** on desktop the controls sit in a left column (tools) and a right column (zoom, grid, tiles, clear, full screen).
+  On phones they move to a bar above the canvas (tools, close) and a bar below it (zoom and actions).
+- The ground is plain green grass edge to edge; everything else is something you place.
 
 ### Tile Manager
 Menu → Tile Manager (or the **Tiles** button in the garden).
