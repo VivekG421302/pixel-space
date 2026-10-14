@@ -60,7 +60,7 @@ The README "Backend API reference" is the contract with the Spring Boot backend.
 (`fq.dto.*` in the console, logged on every page load): `src/data/dto.js` has the pure builders, and the "backend DTOs"
 section at the end of `engine/app.js` wires them to the state.
 - Sprites: every tile (Pixel Creator, upload, sprite-sheet slice, edits) is a custom sprite with a numeric `sid` (from 1001),
-  `created` / `updated` stamps, and a category (default `CUSTOMS`). Built-ins are ids `index + 1` (1 to 80).
+  `created` / `updated` stamps, and a category (default `CUSTOMS`). Built-ins are ids `index + 1` (1 to 699; animated ones export their first frame).
 - Garden: `G.cells` (cell key -> up to two ids) maps to the `layer-1` / `layer-2` 256 x 128 grids; timestamps live in `fq_garden_meta`.
 - Tasks: `S.tasks` maps to the Task DTO (`id` doubles as creation time; `at` is the completion time).
 - If you add a field or a feature that changes sprites, the garden, tasks or users, update the builders, the README tables and the
@@ -107,8 +107,10 @@ section at the end of `engine/app.js` wires them to the state.
 - Reset path: Settings → Reset data clears all of the above.
 
 ## Assets
-- `src/assets/atlas.png` + `src/data/atlasMeta.js`: garden sprite atlas. Entries are `[kind,x,y,w,h]`
-  with kind `g` ground tile, `p` prop tile, `n` nature object. Keep them in sync if you repack.
+- `src/assets/atlas.png` + `src/data/atlasMeta.js`: garden sprite atlas. Entries are `[kind,x,y,w,h,category?,frames?]`
+  with kind `g` ground tile, `p` prop tile, `n` nature object. `category` overrides the default tab (`GROUND`/`PROPS`/`NATURE`);
+  `frames` > 1 means an animation whose frames are stacked vertically (frame k at `y + k*h`). Keep them in sync if you repack.
+  The Craftpix dungeon pack (ids 81 to 699) was appended by `scripts/pack-dungeon.py`; the atlas is now 512 x 826 (`AH` in the engine).
 - `cats.png`, `saga.png`: buddy sprite sheets (frame indexes are defined in the engine's pet definitions).
 
 ## Conventions

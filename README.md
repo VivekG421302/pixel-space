@@ -93,6 +93,9 @@ A 128 × 256 tile ground to decorate. Open it from the dock, the menu, or `G`.
   filled tile stacks on top; placing on a full tile replaces the top layer.
 - **Zoom** with `Ctrl` + mouse wheel, `Ctrl +` / `Ctrl -` (with the pointer over the canvas), or the
   +/- buttons. `Ctrl 0` resets. The garden saves automatically.
+- **Dungeon pack:** four extra tabs (**Dungeon** walls and floors, **Dungeon Decor** cracks, **Dungeon Props** chests, barrels, pots, gold,
+  stairs, ladders and animated doors, **Dungeon Fire** animated torches and braziers). Animated sprites play while they are on screen
+  and show their first frame when Motion is set to reduced.
 - **Full screen:** the **Full** button fills the screen (browser fullscreen where supported, otherwise the whole viewport).
 - **Layout:** on desktop the controls sit in a left column (tools) and a right column (zoom, grid, tiles, clear, full screen).
   On phones they move to a bar above the canvas (tools, close) and a bar below it (zoom and actions).
@@ -351,7 +354,7 @@ All paths are relative to `{{Base Url}}`.
 | Method | Path | Request | Response |
 |---|---|---|---|
 | GET | `/sprites` | none | `200` array of the user's Sprite DTOs |
-| GET | `/sprites/builtin` | none (public, cacheable) | `200` array of system Sprite DTOs (ids 1 to 80). Seed data: `docs/seed/builtin-sprites.json` |
+| GET | `/sprites/builtin` | none (public, cacheable) | `200` array of system Sprite DTOs (ids 1 to 699). Seed data: `docs/seed/builtin-sprites.json` |
 | GET | `/sprites/{id}` | none | `200` Sprite DTO (own or built-in) |
 | POST | `/sprites` | Sprite DTO without `id` | `201` Sprite DTO with the new `id` |
 | POST | `/sprites/batch` | `{ "sprites": [Sprite DTO] }` | `200 { "sprites": [Sprite DTO], "id-map": { "<client-id>": <id> } }` |
@@ -498,3 +501,7 @@ src/
 
 ## Credits
 Garden tiles and nature sprites come from the sprite sheets supplied by the project owner.
+
+## Credits
+- Dungeon tiles and sprites: [Free 2D Top-Down Pixel Dungeon Asset Pack](https://craftpix.net/) by Craftpix.net, used under the
+  [Craftpix free license](https://craftpix.net/file-licenses/). `scripts/pack-dungeon.py` shows how the pack was sliced into the atlas.

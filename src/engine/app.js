@@ -334,14 +334,14 @@ export function initApp() {
   el.addEventListener('pointerup',endDrag);el.addEventListener('pointercancel',endDrag);
 
   /* ---- garden: 128 x 256 tile ground, sprite dock, 2 stacked layers per tile ---- */
-  const AH=208,AW=512,GW=128,GH=256,TS=16,AI=new Image();
+  const AH=826,AW=512,GW=128,GH=256,TS=16,AI=new Image();
   const GRS=META.map((m,i)=>m[0]==='g'?i:-1).filter(i=>i>=0),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const G={cells:new Map(),z:innerWidth<640?2:3,cx:GW*TS/2,cy:GH*TS/2,tool:'paint',sel:META.findIndex(m=>m[0]==='n'),cat:'NATURE',mv:null,grid:true,hov:null,space:false};
   try{(LS('fq_garden')||[]).forEach(a=>G.cells.set(a[0],a.slice(1)))}catch(e){}
-  const BI=META.map((m,i)=>({id:i,mode:m[0]==='g'||m[0]==='p'?m[0]:'o',cat:{g:'GROUND',p:'PROPS',n:'NATURE'}[m[0]],x:m[1],y:m[2],w:m[3],h:m[4]}));
+  const BI=META.map((m,i)=>({id:i,mode:m[0]==='g'||m[0]==='p'?m[0]:'o',cat:m[5]||{g:'GROUND',p:'PROPS',n:'NATURE'}[m[0]],x:m[1],y:m[2],w:m[3],h:m[4],fr:m[6]||1})); // m[5] category, m[6] animation frames (stacked vertically)
   const CT=[],CTM=new Map(),ITEM=id=>typeof id==='number'?BI[id]:CTM.get(id);
   for(const[k,a]of[...G.cells]){const n=a.filter(x=>typeof x!=='number'||x<META.length);if(n.length!==a.length){if(n.length)G.cells.set(k,n);else G.cells.delete(k)}}
-  const cats=()=>{const s=['GROUND','PROPS','NATURE'];CT.forEach(t=>{if(!s.includes(t.cat))s.push(t.cat)});return s};
+  const cats=()=>{const s=[...new Set(BI.map(i=>i.cat))];CT.forEach(t=>{if(!s.includes(t.cat))s.push(t.cat)});return s};
   document.documentElement.style.setProperty('--atl',`url(${ATLAS})`);
   let gsT,gq=false;const GM=Object.assign({created:null,updated:null},LS('fq_garden_meta')||{});
   const gsave=()=>{clearTimeout(gsT);const now=Date.now();GM.updated=now;if(!GM.created)GM.created=now;gsT=setTimeout(()=>{SV('fq_garden',[...G.cells].map(([k,a])=>[k,...a]));SV('fq_garden_meta',GM);dtoChanged('garden changed')},400)};
@@ -351,9 +351,9 @@ export function initApp() {
   function gerase(c,r){const k=r*GW+c,a=G.cells.get(k);if(!a)return false;a.pop();if(!a.length)G.cells.delete(k);return true}
   function gdraw(){gq=false;if(!$('#mg').classList.contains('open')||!AI.complete)return;
    const W=gcv.width,H=gcv.height,z=G.z,ts=TS*z,ox=Math.round(W/2-G.cx*z),oy=Math.round(H/2-G.cy*z);
-   gx.imageSmoothingEnabled=false;gx.fillStyle='#86bba5';gx.fillRect(0,0,W,H);
+   G.anim=false;gx.imageSmoothingEnabled=false;gx.fillStyle='#86bba5';gx.fillRect(0,0,W,H);
    const c0=Math.max(0,Math.floor(-ox/ts)),c1=Math.min(GW-1,Math.floor((W-ox)/ts)),r0=Math.max(0,Math.floor(-oy/ts)),r1=Math.min(GH-1,Math.floor((H-oy)/ts));
-   const put=(id,c,r,al)=>{const it=ITEM(id);if(!it||(it.img&&!it.img.complete))return;const ag=it.mode!=='o',dx=ag?ox+c*ts:ox+Math.round((c*TS+TS/2-it.w/2)*z),dy=ag?oy+r*ts:oy+Math.round(((r+1)*TS-it.h-1)*z);if(al)gx.globalAlpha=al;if(it.img)gx.drawImage(it.img,0,0,it.w,it.h,dx,dy,it.w*z,it.h*z);else gx.drawImage(AI,it.x,it.y,it.w,it.h,dx,dy,it.w*z,it.h*z);if(al)gx.globalAlpha=1};
+   const put=(id,c,r,al)=>{const it=ITEM(id);if(!it||(it.img&&!it.img.complete))return;const ag=it.mode!=='o',dx=ag?ox+c*ts:ox+Math.round((c*TS+TS/2-it.w/2)*z),dy=ag?oy+r*ts:oy+Math.round(((r+1)*TS-it.h-1)*z);if(al)gx.globalAlpha=al;if(it.img)gx.drawImage(it.img,0,0,it.w,it.h,dx,dy,it.w*z,it.h*z);else{let fy=it.y;if(it.fr>1){G.anim=true;if(!reducedMotion())fy+=(Math.floor(performance.now()/160)%it.fr)*it.h}gx.drawImage(AI,it.x,fy,it.w,it.h,dx,dy,it.w*z,it.h*z)}if(al)gx.globalAlpha=1};
    const ra=Math.max(0,r0-8),rb=Math.min(GH-1,r1+5),ca=Math.max(0,c0-8),cb=Math.min(GW-1,c1+3);
    {const gi=ITEM(GRS[0]);if(gi)for(let r=Math.floor(-oy/ts);r<=Math.floor((H-oy)/ts);r++)for(let c=Math.floor(-ox/ts);c<=Math.floor((W-ox)/ts);c++)put(GRS[0],c,r)} // base: plain green grass only, edge to edge
    for(let r=ra;r<=r1;r++)for(let c=ca;c<=cb;c++){const a=G.cells.get(r*GW+c);if(a)a.forEach(id=>{if(ITEM(id)?.mode==='g')put(id,c,r)})}
@@ -564,6 +564,9 @@ export function initApp() {
    else if(G.over&&$('#mg').classList.contains('open')){e.preventDefault();if(rs)gzoomAt(3-G.z,G.mx,G.my);else gzoomAt(up?1:-1,G.mx,G.my)}},true);
   addEventListener('resize',()=>pxd());
   new ResizeObserver(()=>{const v=$('#gview');gcv.width=v.clientWidth;gcv.height=v.clientHeight;gd()}).observe($('#gview'));
+  /* ---- animated garden sprites (torches, fire, doors, chests): redraw only while one is on screen ---- */
+  setInterval(()=>{if(G.anim&&!document.hidden&&!reducedMotion()&&$('#mg').classList.contains('open'))gd()},160);
+
   /* ---- garden fullscreen ---- */
   const gfsOn=()=>$('#mg').classList.contains('full');
   function gfsSet(v){const m=$('#mg'),b=$('#gfs');m.classList.toggle('full',v);b.textContent=v?'EXIT FULL':'FULL';b.setAttribute('aria-pressed',v);

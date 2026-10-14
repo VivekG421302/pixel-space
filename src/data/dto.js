@@ -4,6 +4,7 @@
 // Conventions: kebab-case keys, timestamps as UTC "YYYY-MM-DD HH:mm:ss", colours as hex without "#".
 
 export const SPRITE_TYPES = { g: 'GROUND', p: 'PROPS', o: 'OBJECTS' }; // engine mode -> DTO type
+// Default category by atlas kind. An atlas entry may override it with its 6th element (the dungeon pack does).
 export const BUILTIN_CATEGORY = { g: 'GROUND', p: 'PROPS', n: 'NATURE' };
 export const BUILTIN_TS = Date.UTC(2026, 9, 11); // fixed creation time for the built-in (system) sprites
 

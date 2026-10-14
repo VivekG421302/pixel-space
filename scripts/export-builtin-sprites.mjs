@@ -12,8 +12,8 @@ const { META } = await import(pathToFileURL(path.join(root, 'src/data/atlasMeta.
 const atlas = PNG.sync.read(fs.readFileSync(path.join(root, 'src/assets/atlas.png')));
 
 const count = {};
-const sprites = META.map(([kind, x, y, w, h], i) => {
-  const category = BUILTIN_CATEGORY[kind];
+const sprites = META.map(([kind, x, y, w, h, cat], i) => {
+  const category = cat || BUILTIN_CATEGORY[kind];
   count[category] = (count[category] || 0) + 1;
   const data = imageDataToMatrix({
     width: w,
