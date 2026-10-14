@@ -7,6 +7,12 @@
     <script>try{var s=JSON.parse(localStorage.getItem('focusquest')||'{}'),d=s.scheme==='dark'||s.theme==='night'||(s.scheme==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.scheme=d?'dark':'light';document.documentElement.dataset.theme=(s.theme&&s.theme!=='night')?s.theme:'leaf';var a=s.a11y||{},r=document.documentElement.dataset;r.font=a.font==='readable'?'readable':'pixel';r.text=a.text||'normal';r.contrast=a.contrast||'normal';r.motion=a.motion||'auto';if(a.font==='readable'){var l=document.createElement('link');l.id='fq-readable-font';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap';document.head.appendChild(l)}}catch(e){}</script>
     <title>Focus Quest</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Focus Quest" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="description" content="A pixel-art focus timer with a roaming buddy, tasks, a garden builder and a pixel creator." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />

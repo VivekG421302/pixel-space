@@ -55,6 +55,15 @@ Unlike the rest of the UI, auth is a **real React feature** in `src/auth/` (stat
 - Backend contract: README "Backend API reference" and `docs/AUTH_API.md` (`{{Base Url}}` = backend origin + `/api/v1`). Local mock: `npm run mock:api` (needs `npm run dev` or `npm run preview`, both proxy `/api`).
 - For future sync code, call `authFetch()` from `src/auth/api.js` (or `useAuth().authFetch`); do not read tokens elsewhere.
 
+## PWA (installable, offline)
+- `vite.config.js` configures `vite-plugin-pwa` (manifest, Workbox precache of the build, Google Fonts runtime cache, `/api` excluded from
+  the navigation fallback). `registerType: 'prompt'`: a new service worker waits until the user accepts the reload.
+- `src/pwa.js` registers the worker and holds the state (`pwa`: `offlineReady`, `needRefresh`, `installEvent`, `installed`); it emits the window event
+  `fq:pwa`. The engine's "PWA" section renders it (`#install` button on the timer, Settings → App) and asks before reloading (not while a timer runs).
+- The worker only exists in production builds. Test with `npm run build && npm run preview`. Never cache `/api` or auth responses.
+- Icons: `scripts/make-pwa-icons.py` -> `public/icons/`. If you add a new top-level static file type, add it to `workbox.globPatterns`.
+- `vercel.json` serves `/sw.js` with `no-cache` so updates are picked up.
+
 ## Backend DTOs (keep these in sync)
 The README "Backend API reference" is the contract with the Spring Boot backend. The engine rebuilds the DTOs from live state
 (`fq.dto.*` in the console, logged on every page load): `src/data/dto.js` has the pure builders, and the "backend DTOs"

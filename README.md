@@ -84,6 +84,17 @@ The banner above the timer keeps a fixed 3:1 shape (images are cropped to fit, n
   use it, delete old ones. The library keeps your 24 most recent.
 - ✕ hides the banner. A **+ Banner** button brings it back. You can also drop an image anywhere on the page.
 
+### Installable app (PWA)
+Focus Quest is a Progressive Web App.
+- **Install:** an **INSTALL APP** button appears under the timer controls when your browser offers installation (Chrome, Edge, Android),
+  and Settings → App has an **Install** button. On iPhone and iPad use Share → Add to Home Screen. The installed app opens in its own window.
+- **Offline:** after the first visit everything (timer, tasks, garden, tiles, pixel creator, fonts) works without a connection. Buddy facts and
+  jokes fall back to the built-in lines when offline. Your data never leaves the browser, so nothing needs to sync.
+- **Updates:** a new version downloads in the background and the app asks before reloading (it waits if a timer is running).
+  Settings → App → **Check now** looks for one on demand. The app also checks when you return to it and hourly.
+- The service worker is generated at build time by `vite-plugin-pwa` (see `vite.config.js`) and only runs in the built app, not in `npm run dev`.
+  Try it with `npm run build && npm run preview`. The `/api` backend is never cached. Icons are drawn by `scripts/make-pwa-icons.py`.
+
 ### Garden builder
 A 128 × 256 tile ground to decorate. Open it from the dock, the menu, or `G`.
 - Pick a sprite from the dock (tabs: **Ground**, **Props**, **Nature**, plus any categories you create).

@@ -47,6 +47,17 @@ function SettingsModal() {
           <p className="alabel" id="al-mo">Motion</p>
           <div className="cbar" id="a11ymo" role="group" aria-labelledby="al-mo"></div>
           <p className="hint">Auto follows your device settings. Browser zoom also works everywhere.</p>
+          <h3>APP</h3>
+          <p className="hint" id="pwast" role="status">Checking…</p>
+          <div className="row">
+            <span>Install on this device</span>
+            <button className="gb sm" id="pwai">INSTALL</button>
+          </div>
+          <p className="hint" id="pwah"></p>
+          <div className="row">
+            <span>Updates</span>
+            <button className="gb sm" id="pwau">CHECK NOW</button>
+          </div>
           <h3>BANNER</h3>
           <div className="row">
             <span>Cover image</span>

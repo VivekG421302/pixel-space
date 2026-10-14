@@ -8,6 +8,7 @@ import ATLAS from '../assets/atlas.png';
 import { META } from '../data/atlasMeta.js';
 import { getTalk } from '../data/funFacts.js';
 import { BUILTIN_TS, SPRITE_TYPES, gardenDto, imageDataToMatrix, spriteDto, taskDto, userDto } from '../data/dto.js';
+import { pwa, promptInstall } from '../pwa.js';
 
 let started = false;
 
@@ -224,6 +225,26 @@ export function initApp() {
    }catch(e){pipWin=null;pipVid=null;pipCv=null;pipBtn();announce('Picture in picture is not available right now.')}}
   $('#pip').onclick=()=>{click();pipToggle()};pipBtn();
 
+  /* ---- PWA: install, offline and updates (the state lives in src/pwa.js) ---- */
+  let pwaAsked=false,pwaHeard=false;
+  function pwaUI(){const ib=$('#install'),si=$('#pwai'),st=$('#pwast'),h=$('#pwah'),pu=$('#pwau');if(!st)return;
+   const can=!!pwa.installEvent&&!pwa.installed,ready=pwa.offlineReady||!!(navigator.serviceWorker&&navigator.serviceWorker.controller);
+   if(ib)ib.hidden=!can;si.disabled=!can;si.textContent=pwa.installed?'INSTALLED':'INSTALL';
+   st.textContent=import.meta.env.DEV?'Offline support and updates are active in the built app (npm run build, then npm run preview).':!pwa.supported?'This browser cannot install the app or run it offline.':[pwa.installed?'Running as an installed app.':'Running in the browser.',ready?'Works offline.':'Preparing offline use...',navigator.onLine?'':'You are offline.',pwa.needRefresh?'An update is ready.':''].filter(Boolean).join(' ');
+   h.textContent=pwa.installed||can||!pwa.supported?'':pwa.ios?'On iPhone or iPad: tap Share, then Add to Home Screen.':'Your browser offers to install the app when it is ready (look for an install icon in the address bar or the browser menu).';
+   pu.textContent=pwa.needRefresh?'RELOAD':'CHECK NOW'}
+  $('#install').onclick=$('#pwai').onclick=async()=>{click();if(await promptInstall()==='accepted')announce('Installing Focus Quest.')};
+  $('#pwau').onclick=async()=>{click();if(pwa.needRefresh){pwa.update(true);return}const b=$('#pwau');
+   if(!pwa.registration){announce('Updates are checked automatically in the built app.');return}
+   b.textContent='CHECKING...';try{await pwa.registration.update()}catch(e){}
+   setTimeout(()=>{pwaUI();announce(pwa.needRefresh?'An update is ready.':'You have the latest version.')},800)};
+  function pwaEvent(){pwaUI();
+   if(pwa.offlineReady&&!pwaHeard){pwaHeard=true;announce('Focus Quest is ready to work offline.')}
+   if(pwa.needRefresh&&!pwaAsked){pwaAsked=true;
+    if(run)announce('A new version is ready. Reload from Settings when your timer is done.');
+    else ask('A new version of Focus Quest is ready. Reload now?','RELOAD','UPDATE READY').then(ok=>{if(ok)pwa.update(true)})}}
+  addEventListener('fq:pwa',pwaEvent);pwaUI();
+
   /* ---- calendar ---- */
   let vd=new Date();vd.setDate(1);
   function cal(){const t=new Date(),y=vd.getFullYear(),m=vd.getMonth(),first=vd.getDay(),days=new Date(y,m+1,0).getDate();
@@ -252,7 +273,7 @@ export function initApp() {
   /* ---- settings & about ---- */
   function tile(k,p){const f=p.idle[0],c=f%p.cols,r=Math.floor(f/p.cols),s=p.tz||Math.min(1.2,56/p.cw,62/p.ch);
    return `<button class="tile ${S.pet===k?'on':''}" data-pet="${k}"><i style="width:${p.cw*s}px;height:${p.ch*s}px;background-image:url(${p.src});background-size:${p.cols*p.cw*s}px ${p.rows*p.ch*s}px;background-position:-${c*p.cw*s}px -${r*p.ch*s}px"></i>${p.n||'MINE'}</button>`}
-  function settings(){thUI();a11yUI();tkUI();$('#durs').innerHTML='<span></span><span class="h">FOCUS</span><span class="h">REST</span>'+Object.entries(MODES).map(([k,m])=>`<span>${m.n}</span><input type="number" min="1" max="240" data-k="${k}" data-p="f" aria-label="${m.n} focus minutes" value="${dur(k).f}"><input type="number" min="1" max="120" data-k="${k}" data-p="b" aria-label="${m.n} rest minutes" value="${dur(k).b}">`).join('');
+  function settings(){thUI();a11yUI();tkUI();pwaUI();$('#durs').innerHTML='<span></span><span class="h">FOCUS</span><span class="h">REST</span>'+Object.entries(MODES).map(([k,m])=>`<span>${m.n}</span><input type="number" min="1" max="240" data-k="${k}" data-p="f" aria-label="${m.n} focus minutes" value="${dur(k).f}"><input type="number" min="1" max="120" data-k="${k}" data-p="b" aria-label="${m.n} rest minutes" value="${dur(k).b}">`).join('');
    $('#snd').textContent=S.snd?'ON':'OFF';$('#snd').classList.toggle('on',S.snd);$('#snd').setAttribute('aria-pressed',S.snd);$('#vol').value=S.vol;
    const pe=Object.entries(PETS);$('#pets').innerHTML=pe.filter(([k])=>!k.startsWith('sg')).map(([k,p])=>tile(k,p)).join('')+(S.custom?tile('custom',S.custom):'');$('#pets2').innerHTML=pe.filter(([k])=>k.startsWith('sg')).map(([k,p])=>tile(k,p)).join('');keysUI()}
   document.querySelectorAll('#pets,#pets2').forEach(g=>g.onclick=e=>{const b=e.target.closest('[data-pet]');if(!b)return;S.pet=b.dataset.pet;save();click();size();settings()});
