@@ -12,6 +12,10 @@ function SettingsModal() {
         <div className="sb">
           <h3>TIMERS (minutes)</h3>
           <div className="tbl" id="durs"></div>
+          <div className="row">
+            <span>Auto cycle (focus, chime, break, repeat)</span>
+            <button className="gb sm" id="autos" aria-pressed="false">OFF</button>
+          </div>
           <h3>SOUND</h3>
           <div className="row">
             <span>Chimes</span>

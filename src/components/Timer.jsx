@@ -40,6 +40,9 @@ function Timer() {
             <small className="kh" aria-hidden="true" id="ks"></small>
           </button>
         </div>
+        <div className="ftools">
+          <button className="gb sm" id="auto" aria-pressed="false" title="Automatic Pomodoro cycle: focus, chime, break, chime, repeat">AUTO: OFF</button>
+        </div>
       </div>
       <div className="dock">
         <button className="gb" id="bm">MENU</button>

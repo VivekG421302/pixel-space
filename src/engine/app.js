@@ -17,7 +17,7 @@ export function initApp() {
   const $=s=>document.querySelector(s),LS=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
   const MODES={pomo:{n:'POMODORO',f:25,b:5,c:['#78c850','#68b840','#48a030']},r52:{n:'52/17',f:52,b:17,c:['#68b8e8','#58a8d8','#3878c8']},u90:{n:'90-MIN',f:90,b:20,c:['#a890d0','#9880c0','#6850a0']},tbx:{n:'TIMEBOX',f:60,b:10,c:['#f8a050','#e89040','#d06820']},cus:{n:'CUSTOM',f:30,b:10,c:['#b8b8a8','#a8a898','#707868']}};
   const DK={play:' ',reset:'r',skip:'s',mode:'m',task:'n',tabs:'t',sound:'x',menu:',',garden:'g',banner:'b',dark:'d'};
-  let S=Object.assign({mode:'pomo',snd:true,vol:60,pet:'cat3',dur:{},tasks:[],custom:null,banner:'default',cover:null,kb:true,keys:{},theme:'leaf',scheme:'light',a11y:{},talk:{}},LS('focusquest')||{},{cover:LS('fq_cover'),custom:LS('fq_custom')});{const sk=S.keys||{};S.keys={...DK,...sk};if(!sk.menu&&sk.settings)S.keys.menu=sk.settings;delete S.keys.settings;delete S.keys.about;if(S.theme==='night'){S.theme='leaf';S.scheme='dark'}S.a11y={font:'pixel',text:'normal',contrast:'normal',motion:'auto',...S.a11y};S.talk={on:true,mode:'both',...S.talk}}
+  let S=Object.assign({mode:'pomo',snd:true,vol:60,pet:'cat3',dur:{},tasks:[],custom:null,banner:'default',cover:null,kb:true,auto:false,keys:{},theme:'leaf',scheme:'light',a11y:{},talk:{}},LS('focusquest')||{},{cover:LS('fq_cover'),custom:LS('fq_custom')});{const sk=S.keys||{};S.keys={...DK,...sk};if(!sk.menu&&sk.settings)S.keys.menu=sk.settings;delete S.keys.settings;delete S.keys.about;if(S.theme==='night'){S.theme='leaf';S.scheme='dark'}S.a11y={font:'pixel',text:'normal',contrast:'normal',motion:'auto',...S.a11y};S.talk={on:true,mode:'both',...S.talk}}
   const save=()=>{const{cover,custom,...r}=S;SV('focusquest',r);SV('fq_custom',custom);return SV('fq_cover',cover)};
   const dur=m=>({f:S.dur[m]?.f??MODES[m].f,b:S.dur[m]?.b??MODES[m].b});
   let phase='focus',left=dur(S.mode).f*60,run=false,endAt=0,tick;
@@ -157,10 +157,10 @@ export function initApp() {
   function ui(){const m=MODES[S.mode],r=document.documentElement.style;
    const th=THEMES[S.theme]||THEMES.leaf,dk=isDark(),dg=dk&&DARK.g,da=dk&&DARK.a;document.documentElement.dataset.theme=THEMES[S.theme]?S.theme:'leaf';document.documentElement.dataset.scheme=dk?'dark':'light';r.setProperty('--g1',tint(tint(m.c[0],th.g),dg));r.setProperty('--g2',tint(tint(m.c[1],th.g),dg));{const ar=tint(tint(m.c[2],th.a),da),hc=S.a11y.contrast==='high',boxC=hc?(dk?'#000000':'#ffffff'):dk?'#262a35':S.theme==='berry'?'#fff3f7':'#f8f8f8';r.setProperty('--acc',fit(ar,'#ffffff',4.5,'#000000'));r.setProperty('--acc-text',dk?fit(ar,boxC,4.5,'#ffffff'):fit(ar,boxC,4.5,'#000000'))}
    const s=Math.max(0,Math.ceil(left)),mm=String(Math.floor(s/60)).padStart(2,'0'),ss=String(s%60).padStart(2,'0');$('#mm').textContent=mm;$('#ss').textContent=ss;$('#mm').style.fontSize=mm.length>2?'calc(var(--w)*.29)':'';$('#clock').classList.toggle('run',run);document.title=mm+':'+ss+' · Focus Quest';
-   const pc=Math.max(0,Math.min(100,left/total()*100));$('#hpb').style.width=pc+'%';$('#hpb').style.background=pc>50?'#48d848':pc>20?'#f8d030':'#f85838';$('#hpl').textContent=phase==='focus'?'TIME LEFT':'BREAK LEFT';{const hp=$('.hp[role=progressbar]');hp.setAttribute('aria-valuenow',Math.round(pc));hp.setAttribute('aria-valuetext',`${+mm} minutes ${+ss} seconds left`);$('#clock').setAttribute('aria-label',`Time remaining: ${+mm} minutes ${+ss} seconds. ${phase==='focus'?'Focus':'Break'} ${run?'running':'paused'}`)}$('#badge').textContent=phase==='focus'?'FOCUS':'REST';
+   const pc=Math.max(0,Math.min(100,left/total()*100));$('#hpb').style.width=pc+'%';$('#hpb').style.background=pc>50?'#48d848':pc>20?'#f8d030':'#f85838';$('#hpl').textContent=phase==='focus'?'TIME LEFT':'BREAK LEFT';{const hp=$('.hp[role=progressbar]');hp.setAttribute('aria-valuenow',Math.round(pc));hp.setAttribute('aria-valuetext',`${+mm} minutes ${+ss} seconds left`);$('#clock').setAttribute('aria-label',`Time remaining: ${+mm} minutes ${+ss} seconds. ${phase==='focus'?'Focus':'Break'} ${run?'running':'paused'}`)}$('#badge').textContent=chiming?'DING!':phase==='focus'?'FOCUS':'REST';
    say(quip(phase+run,m));{const ak=phase+run;if(annKey!==null&&annKey!==ak)announce(run?(phase==='focus'?`Focus started. ${Math.round(total()/60)} minutes.`:'Break started.'):(annKey.endsWith('true')?'Paused.':phase==='focus'?'Ready to focus.':'Break ready.'));annKey=ak}
-   $('#plabel').textContent=run?'PAUSE':(phase==='break'||left<total()?'RESUME':'START');
-   $('#msel').value=S.mode}
+   $('#plabel').textContent=chiming?'WAIT':run?'PAUSE':(phase==='break'||left<total()?'RESUME':'START');
+   $('#msel').value=S.mode;autoUI()}
   const M={};
   function mile(){const t=total();
    if(phase==='focus'){if(!M.h&&t>=600&&left<=t/2){M.h=1;talk('Halfway there! Keep it up.',4,2)}
@@ -168,12 +168,23 @@ export function initApp() {
     if(!M.l&&t>=180&&left<=60){M.l=1;talk('Last minute! Almost there.',4,2)}}
    else{if(!M.h&&t>=360&&left<=t/2){M.h=1;talk('Break is halfway done.',3.5,2)}
     if(!M.l&&t>=120&&left<=60){M.l=1;talk('One minute left. Get ready!',3.5,2)}}}
-  function loop(){left=(endAt-Date.now())/1000;if(left<=0){left=0;run=false;clearInterval(tick);done();phase=phase==='focus'?'break':'focus';left=total();for(const k in M)delete M[k];react('done');annKey=phase+run;announce(phase==='break'?'Focus session finished. Time for a break.':'Break over. Ready to focus.')}else mile();ui()}
-  function toggle(){click();if(run){run=false;clearInterval(tick);react('pause')}else{const t=total();if(left<t/2-2)M.h=1;if(left<298)M.f=1;if(left<58)M.l=1;run=true;endAt=Date.now()+left*1000;tick=setInterval(loop,250);react('play')}ui()}
-  function reset(full=true){clearInterval(tick);run=false;if(full)phase='focus';left=total();for(const k in M)delete M[k];ui()}
+  function loop(){left=(endAt-Date.now())/1000;if(left<=0&&S.auto){left=0;run=false;clearInterval(tick);chimeThenNext();ui();return}if(left<=0){left=0;run=false;clearInterval(tick);done();phase=phase==='focus'?'break':'focus';left=total();for(const k in M)delete M[k];react('done');annKey=phase+run;announce(phase==='break'?'Focus session finished. Time for a break.':'Break over. Ready to focus.')}else mile();ui()}
+  function toggle(){click();if(chiming){stopChime(true);ui();return}if(run){run=false;clearInterval(tick);react('pause')}else{const t=total();if(left<t/2-2)M.h=1;if(left<298)M.f=1;if(left<58)M.l=1;run=true;endAt=Date.now()+left*1000;tick=setInterval(loop,250);react('play')}ui()}
+  function reset(full=true){stopChime(false);clearInterval(tick);run=false;if(full)phase='focus';left=total();for(const k in M)delete M[k];ui()}
   $('#play').onclick=toggle;$('#reset').onclick=()=>{click();reset()};$('#skip').onclick=()=>{click();phase=phase==='focus'?'break':'focus';reset(false);react('skip')};
   $('#msel').innerHTML=Object.entries(MODES).map(([k,m])=>`<option value="${k}">${m.n}</option>`).join('');
   $('#msel').onchange=e=>{click();S.mode=e.target.value;save();reset()};
+
+  /* ---- auto cycle: focus > 5 s chime > break > 5 s chime > focus ... ---- */
+  const CHIME_MS=5000;let chiming=false,chimeT=0;
+  const chimeLong=()=>{const n=[523,659,784,1047,0,784,1047,1319];[0,1.25,2.5,3.75].forEach(o=>n.forEach((f,i)=>f&&tone(f,o+i*.14,.18)))};
+  function flipPhase(){phase=phase==='focus'?'break':'focus';left=total();for(const k in M)delete M[k]}
+  function chimeThenNext(){const was=phase;chiming=true;chimeLong();announce(was==='focus'?'Focus session finished. Break starts in 5 seconds.':'Break over. Focus starts in 5 seconds.');react('done');
+   chimeT=setTimeout(()=>{if(!chiming)return;chiming=false;flipPhase();run=true;endAt=Date.now()+left*1000;tick=setInterval(loop,250);annKey=phase+run;announce(phase==='focus'?`Focus started. ${Math.round(total()/60)} minutes.`:'Break started.');react('play');ui()},CHIME_MS)}
+  function stopChime(advance){if(!chiming)return;clearTimeout(chimeT);chiming=false;if(advance)flipPhase()}
+  function autoUI(){const b=$('#auto'),s=$('#autos');if(b){b.textContent='AUTO: '+(S.auto?'ON':'OFF');b.classList.toggle('on',!!S.auto);b.setAttribute('aria-pressed',!!S.auto)}if(s){s.textContent=S.auto?'ON':'OFF';s.classList.toggle('on',!!S.auto);s.setAttribute('aria-pressed',!!S.auto)}}
+  function autoSet(v){S.auto=v;save();click();if(v&&!run&&!chiming)toggle();else ui();announce(v?'Auto cycle on.':'Auto cycle off.')}
+  $('#auto').onclick=()=>autoSet(!S.auto);$('#autos').onclick=()=>autoSet(!S.auto);
 
   /* ---- calendar ---- */
   let vd=new Date();vd.setDate(1);
