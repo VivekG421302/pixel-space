@@ -160,7 +160,7 @@ export function initApp() {
    const pc=Math.max(0,Math.min(100,left/total()*100));$('#hpb').style.width=pc+'%';$('#hpb').style.background=pc>50?'#48d848':pc>20?'#f8d030':'#f85838';$('#hpl').textContent=phase==='focus'?'TIME LEFT':'BREAK LEFT';{const hp=$('.hp[role=progressbar]');hp.setAttribute('aria-valuenow',Math.round(pc));hp.setAttribute('aria-valuetext',`${+mm} minutes ${+ss} seconds left`);$('#clock').setAttribute('aria-label',`Time remaining: ${+mm} minutes ${+ss} seconds. ${phase==='focus'?'Focus':'Break'} ${run?'running':'paused'}`)}$('#badge').textContent=chiming?'DING!':phase==='focus'?'FOCUS':'REST';
    say(quip(phase+run,m));{const ak=phase+run;if(annKey!==null&&annKey!==ak)announce(run?(phase==='focus'?`Focus started. ${Math.round(total()/60)} minutes.`:'Break started.'):(annKey.endsWith('true')?'Paused.':phase==='focus'?'Ready to focus.':'Break ready.'));annKey=ak}
    $('#plabel').textContent=chiming?'WAIT':run?'PAUSE':(phase==='break'||left<total()?'RESUME':'START');
-   $('#msel').value=S.mode;autoUI()}
+   $('#msel').value=S.mode;autoUI();pipUI()}
   const M={};
   function mile(){const t=total();
    if(phase==='focus'){if(!M.h&&t>=600&&left<=t/2){M.h=1;talk('Halfway there! Keep it up.',4,2)}
@@ -185,6 +185,44 @@ export function initApp() {
   function autoUI(){const b=$('#auto'),s=$('#autos');if(b){b.textContent='AUTO: '+(S.auto?'ON':'OFF');b.classList.toggle('on',!!S.auto);b.setAttribute('aria-pressed',!!S.auto)}if(s){s.textContent=S.auto?'ON':'OFF';s.classList.toggle('on',!!S.auto);s.setAttribute('aria-pressed',!!S.auto)}}
   function autoSet(v){S.auto=v;save();click();if(v&&!run&&!chiming)toggle();else ui();announce(v?'Auto cycle on.':'Auto cycle off.')}
   $('#auto').onclick=()=>autoSet(!S.auto);$('#autos').onclick=()=>autoSet(!S.auto);
+
+  /* ---- picture in picture: Document PiP where available (live, with buttons), else a canvas video ---- */
+  var pipWin=null,pipVid=null,pipCv=null;
+  const pipCan=()=>'documentPictureInPicture' in window||!!(document.pictureInPictureEnabled&&HTMLVideoElement.prototype.requestPictureInPicture);
+  const pipTime=()=>{const s=Math.max(0,Math.ceil(left));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+  const pipLabel=()=>chiming?'DING!':phase==='focus'?'FOCUS':'REST';
+  function pipBtn(){const b=$('#pip');if(!b)return;const on=!!(pipWin||pipVid);b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);b.textContent=on?'PIP: ON':'PIP';if(!pipCan()){b.disabled=true;b.title='Picture in picture is not supported in this browser'}}
+  function pipDraw(){if(!pipCv)return;const c=pipCv.getContext('2d'),cs=getComputedStyle(document.documentElement),v=n=>cs.getPropertyValue(n).trim()||'#000',W=pipCv.width,H=pipCv.height,pc=Math.max(0,Math.min(1,left/total())),f='"Press Start 2P", monospace';
+   c.fillStyle=v('--box');c.fillRect(0,0,W,H);c.strokeStyle=v('--line');c.lineWidth=8;c.strokeRect(4,4,W-8,H-8);
+   c.textAlign='center';c.textBaseline='middle';
+   const lb=pipLabel();c.font='20px '+f;const bw=c.measureText(lb).width+28;c.fillStyle=v('--acc');c.fillRect((W-bw)/2,28,bw,36);c.fillStyle='#fff';c.fillText(lb,W/2,47);
+   c.fillStyle=v('--ink');c.font='64px '+f;c.fillText(pipTime(),W/2,H/2+14);
+   c.fillStyle=v('--panel');c.fillRect(30,H-58,W-60,22);c.fillStyle=pc>.5?'#48d848':pc>.2?'#f8d030':'#f85838';c.fillRect(30,H-58,(W-60)*pc,22);c.strokeStyle=v('--line');c.lineWidth=4;c.strokeRect(30,H-58,W-60,22)}
+  function pipUI(){if(pipWin){const d=pipWin.document,g=id=>d.getElementById(id);if(!g('pt'))return;g('pb').textContent=pipLabel();g('pt').textContent=pipTime();const h=$('#hpb');g('ph').style.width=h.style.width;g('ph').style.background=h.style.background;g('pplay').textContent=$('#plabel').textContent;d.title=pipTime()+' · Focus Quest';
+    const r=document.documentElement;d.documentElement.dataset.theme=r.dataset.theme;d.documentElement.dataset.scheme=r.dataset.scheme;d.documentElement.style.cssText=r.style.cssText}
+   else if(pipVid)pipDraw()}
+  function pipClosed(){pipWin=null;pipVid=null;pipCv=null;pipBtn()}
+  async function pipToggle(){
+   if(pipWin){pipWin.close();pipClosed();return}
+   if(pipVid){try{await document.exitPictureInPicture()}catch(e){}pipClosed();return}
+   try{
+    if('documentPictureInPicture' in window){
+     const w=await window.documentPictureInPicture.requestWindow({width:340,height:210});pipWin=w;
+     document.querySelectorAll('link[rel=stylesheet]').forEach(n=>{const l=w.document.createElement('link');l.rel='stylesheet';l.href=n.href;w.document.head.appendChild(l)});
+     document.querySelectorAll('style').forEach(n=>w.document.head.appendChild(n.cloneNode(true)));
+     w.document.body.className=document.body.className;
+     w.document.body.innerHTML='<div class="pip"><span class="bdg" id="pb"></span><div class="pt" id="pt" role="timer"></div><div class="pbar" aria-hidden="true"><div id="ph"></div></div><div class="pc"><button class="gb sm" id="pplay"></button><button class="gb sm" id="pskip">SKIP</button></div></div>';
+     w.document.getElementById('pplay').onclick=()=>$('#play').click();w.document.getElementById('pskip').onclick=()=>$('#skip').click();
+     w.addEventListener('pagehide',pipClosed);
+    }else{
+     pipCv=document.createElement('canvas');pipCv.width=480;pipCv.height=270;pipDraw();
+     const v=document.createElement('video');v.muted=true;v.playsInline=true;v.srcObject=pipCv.captureStream(10);await v.play();pipVid=v;
+     v.addEventListener('leavepictureinpicture',pipClosed);
+     try{navigator.mediaSession.setActionHandler('play',()=>{if(!run)$('#play').click()});navigator.mediaSession.setActionHandler('pause',()=>{if(run)$('#play').click()})}catch(e){}
+     await v.requestPictureInPicture()}
+    pipBtn();pipUI();announce('Clock popped out into a floating window.')
+   }catch(e){pipWin=null;pipVid=null;pipCv=null;pipBtn();announce('Picture in picture is not available right now.')}}
+  $('#pip').onclick=()=>{click();pipToggle()};pipBtn();
 
   /* ---- calendar ---- */
   let vd=new Date();vd.setDate(1);

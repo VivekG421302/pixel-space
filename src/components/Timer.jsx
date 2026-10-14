@@ -42,6 +42,7 @@ function Timer() {
         </div>
         <div className="ftools">
           <button className="gb sm" id="auto" aria-pressed="false" title="Automatic Pomodoro cycle: focus, chime, break, chime, repeat">AUTO: OFF</button>
+          <button className="gb sm" id="pip" aria-pressed="false" title="Pop the clock out into a small floating window">PIP</button>
         </div>
       </div>
       <div className="dock">
