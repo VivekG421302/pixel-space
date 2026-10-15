@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import PixelIcon from './PixelIcon';
 
 // Static markup. Behaviour is attached by src/engine/app.js (see README).
 function Timer() {
@@ -15,16 +16,10 @@ function Timer() {
           <span id="badge" className="bdg">FOCUS</span>
           <div className="ftools">
             <button className="gb ibtn" id="pip" aria-pressed="false" aria-label="Picture in picture" title="Pop the clock out into a small floating window">
-              <svg viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" shapeRendering="crispEdges" aria-hidden="true">
-                <rect x="1" y="2" width="14" height="12" />
-                <rect x="8" y="8" width="5" height="4" fill="currentColor" />
-              </svg>
+              <PixelIcon name="pip" />
             </button>
             <button className="gb ibtn" id="auto" aria-pressed="false" aria-label="Auto cycle" title="Automatic Pomodoro cycle: focus, chime, break, chime, repeat">
-              <svg viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" shapeRendering="crispEdges" aria-hidden="true">
-                <path d="M13 8a5 5 0 1 1-1.6-3.7" />
-                <path d="M14 1v5h-5z" fill="currentColor" stroke="none" />
-              </svg>
+              <PixelIcon name="cycle" />
             </button>
           </div>
         </div>
