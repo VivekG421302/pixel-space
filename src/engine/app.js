@@ -316,7 +316,7 @@ export function initApp() {
   addEventListener('keydown',e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;
    if(binding){e.preventDefault();if(k==='Escape'){binding=null;keysUI();return}if(['Shift','Control','Alt','Meta'].includes(k))return;
     const old=S.keys[binding];for(const a in S.keys)if(S.keys[a]===k&&a!==binding)S.keys[a]=old;S.keys[binding]=k;binding=null;save();keysUI();return}
-   if(k==='Escape'){const o=[...document.querySelectorAll('.modal.open')];if(o.length)o[o.length-1].classList.remove('open');return}
+   if(k==='Escape'){if($('#mg').classList.contains('open')&&gfsOn()){gfsSet(false);return}const o=[...document.querySelectorAll('.modal.open')];if(o.length)o[o.length-1].classList.remove('open');return}
    if(!S.kb||e.ctrlKey||e.metaKey||e.altKey||e.repeat||typing(e.target)||document.querySelector('.modal.open,.amodal.open'))return;
    if(k===' '&&nativeActivate(e.target))return; // Space must still press a focused button
    const a=Object.keys(S.keys).find(a=>S.keys[a]===k);if(a&&ACTS[a]){e.preventDefault();ACTS[a]()}});
@@ -369,8 +369,16 @@ export function initApp() {
   const gsave=()=>{clearTimeout(gsT);const now=Date.now();GM.updated=now;if(!GM.created)GM.created=now;gsT=setTimeout(()=>{SV('fq_garden',[...G.cells].map(([k,a])=>[k,...a]));SV('fq_garden_meta',GM);dtoChanged('garden changed')},400)};
   const gcv=$('#gc'),gx=gcv.getContext('2d'),gd=()=>{if(!gq){gq=true;requestAnimationFrame(gdraw)}};
   AI.onload=gd;AI.src=ATLAS;
-  function gplace(c,r,id){const k=r*GW+c;let a=G.cells.get(k);if(!a){a=[];G.cells.set(k,a)}if(a[a.length-1]===id)return false;if(a.length<2)a.push(id);else a[1]=id;return true}
-  function gerase(c,r){const k=r*GW+c,a=G.cells.get(k);if(!a)return false;a.pop();if(!a.length)G.cells.delete(k);return true}
+  function gplace(c,r,id){const k=r*GW+c;let a=G.cells.get(k);if(a&&a[a.length-1]===id)return false;gtouch(k);if(!a){a=[];G.cells.set(k,a)}if(a[a.length-1]===id)return false;if(a.length<2)a.push(id);else a[1]=id;return true}
+  function gerase(c,r){const k=r*GW+c,a=G.cells.get(k);if(!a)return false;gtouch(k);a.pop();if(!a.length)G.cells.delete(k);return true}
+  /* undo / redo: each stroke (paint drag, erase drag, one move, a clear) stores the cells it changed as they were before */
+  Object.assign(G,{hist:[],redo:[],cur:null});
+  const ghUI=()=>{const u=$('#gund'),r=$('#gred');if(u)u.disabled=!G.hist.length;if(r)r.disabled=!G.redo.length};
+  function gtouch(k){if(!G.cur||G.cur.has(k))return;const a=G.cells.get(k);G.cur.set(k,a?a.slice():null)}
+  const gsame=(a,b)=>(!a&&!b)||(a&&b&&a.join()===b.join());
+  function gcommit(){const m=G.cur;G.cur=null;if(!m)return;for(const[k,p]of[...m])if(gsame(p,G.cells.get(k)))m.delete(k);if(!m.size)return;G.hist.push(m);if(G.hist.length>100)G.hist.shift();G.redo=[];ghUI()}
+  function gstep(redo){const from=redo?G.redo:G.hist,to=redo?G.hist:G.redo,m=from.pop();if(!m)return;const inv=new Map();for(const[k,p]of m){const c=G.cells.get(k);inv.set(k,c?c.slice():null);if(p)G.cells.set(k,p.slice());else G.cells.delete(k)}to.push(inv);tone(redo?700:440,0,.05);gsave();ghUI();gd()}
+  const ghClear=()=>{G.hist=[];G.redo=[];G.cur=null;ghUI()};
   function gdraw(){gq=false;if(!$('#mg').classList.contains('open')||!AI.complete)return;
    const W=gcv.width,H=gcv.height,z=G.z,ts=TS*z,ox=Math.round(W/2-G.cx*z),oy=Math.round(H/2-G.cy*z);
    G.anim=false;gx.imageSmoothingEnabled=false;gx.fillStyle='#86bba5';gx.fillRect(0,0,W,H);
@@ -380,18 +388,18 @@ export function initApp() {
    {const gi=ITEM(GRS[0]);if(gi)for(let r=Math.floor(-oy/ts);r<=Math.floor((H-oy)/ts);r++)for(let c=Math.floor(-ox/ts);c<=Math.floor((W-ox)/ts);c++)put(GRS[0],c,r)} // base: plain green grass only, edge to edge
    for(let r=ra;r<=r1;r++)for(let c=ca;c<=cb;c++){const a=G.cells.get(r*GW+c);if(a)a.forEach(id=>{if(ITEM(id)?.mode==='g')put(id,c,r)})}
    for(let r=ra;r<=rb;r++)for(let c=ca;c<=cb;c++){const a=G.cells.get(r*GW+c);if(a)a.forEach(id=>{const m=ITEM(id)?.mode;if(m&&m!=='g')put(id,c,r)})}
-   if(G.grid){gx.strokeStyle='rgba(255,255,255,.14)';gx.lineWidth=1;gx.beginPath();for(let c=c0;c<=c1+1;c++){gx.moveTo(ox+c*ts+.5,oy+r0*ts);gx.lineTo(ox+c*ts+.5,oy+(r1+1)*ts)}for(let r=r0;r<=r1+1;r++){gx.moveTo(ox+c0*ts,oy+r*ts+.5);gx.lineTo(ox+(c1+1)*ts,oy+r*ts+.5)}gx.stroke()}
+   if(G.grid&&!gfsOn()){gx.strokeStyle='rgba(255,255,255,.14)';gx.lineWidth=1;gx.beginPath();for(let c=c0;c<=c1+1;c++){gx.moveTo(ox+c*ts+.5,oy+r0*ts);gx.lineTo(ox+c*ts+.5,oy+(r1+1)*ts)}for(let r=r0;r<=r1+1;r++){gx.moveTo(ox+c0*ts,oy+r*ts+.5);gx.lineTo(ox+(c1+1)*ts,oy+r*ts+.5)}gx.stroke()}
    gx.strokeStyle='#fff';gx.lineWidth=3;gx.strokeRect(ox,oy,GW*ts,GH*ts);
-   if(G.mv){const[fc,fr]=G.mv.from;gx.strokeStyle='#f8d030';gx.lineWidth=2;gx.strokeRect(ox+fc*ts+1,oy+fr*ts+1,ts-2,ts-2)}
+   if(G.mv&&!gfsOn()){const[fc,fr]=G.mv.from;gx.strokeStyle='#f8d030';gx.lineWidth=2;gx.strokeRect(ox+fc*ts+1,oy+fr*ts+1,ts-2,ts-2)}
    if(G.hov){const[c,r]=G.hov,gi=G.mv?G.mv.id:G.tool==='paint'?G.sel:null;if(gi!=null)put(gi,c,r,.6);gx.strokeStyle=G.tool==='erase'?'#f85838':'#fff';gx.lineWidth=2;gx.strokeRect(ox+c*ts+1,oy+r*ts+1,ts-2,ts-2)}}
   const gcell=e=>{const b=gcv.getBoundingClientRect(),c=Math.floor(((e.clientX-b.left-gcv.width/2)/G.z+G.cx)/TS),r=Math.floor(((e.clientY-b.top-gcv.height/2)/G.z+G.cy)/TS);return c>=0&&c<GW&&r>=0&&r<GH?[c,r]:null};
   const hud=()=>{const h=G.hov;$('#gpos').textContent=h?`X ${h[0]}  Y ${h[1]}  LAYERS ${(G.cells.get(h[1]*GW+h[0])||[]).length}/2`:''};
   let gp=null;const gvis=new Set();
   function gact(e,erase){const h=gcell(e);if(!h)return;const k=h[1]*GW+h[0];if(gvis.has(k))return;gvis.add(k);
    if(erase){if(gerase(h[0],h[1])){tone(330,0,.05);gsave()}}else if(ITEM(G.sel)&&gplace(h[0],h[1],G.sel)){tone(660,0,.04);gsave()}}
-  gcv.addEventListener('pointerdown',e=>{gcv.setPointerCapture(e.pointerId);gvis.clear();if(G.tool==='move'&&e.button===0&&!G.space){const h=gcell(e),a=h&&G.cells.get(h[1]*GW+h[0]);if(a&&a.length){G.mv={from:h,id:a[a.length-1]};gp={mv:true};gd()}return}const pan=G.tool==='hand'||e.button===1||G.space;gp={x:e.clientX,y:e.clientY,pan,erase:e.button===2||G.tool==='erase'};if(!pan)gact(e,gp.erase);hud();gd()});
-  gcv.addEventListener('pointermove',e=>{G.hov=gcell(e);hud();if(gp){if(gp.pan){G.cx=clamp(G.cx-(e.clientX-gp.x)/G.z,0,GW*TS);G.cy=clamp(G.cy-(e.clientY-gp.y)/G.z,0,GH*TS);gp.x=e.clientX;gp.y=e.clientY}else if(!gp.mv)gact(e,gp.erase)}gd()});
-  gcv.addEventListener('pointerup',()=>{if(G.mv){const f=G.mv.from,h=G.hov;if(h&&(h[0]!==f[0]||h[1]!==f[1])){gerase(f[0],f[1]);gplace(h[0],h[1],G.mv.id);tone(520,0,.05);gsave()}G.mv=null;gd()}gp=null});gcv.addEventListener('pointercancel',()=>{G.mv=null;gp=null;gd()});gcv.addEventListener('pointerleave',()=>{if(!gp){G.hov=null;hud();gd()}});
+  gcv.addEventListener('pointerdown',e=>{gcv.setPointerCapture(e.pointerId);gvis.clear();const pv=gfsOn();if(!pv&&G.tool==='move'&&e.button===0&&!G.space){const h=gcell(e),a=h&&G.cells.get(h[1]*GW+h[0]);if(a&&a.length){G.mv={from:h,id:a[a.length-1]};G.cur=new Map();gp={mv:true};gd()}return}const pan=pv||G.tool==='hand'||e.button===1||G.space;gp={x:e.clientX,y:e.clientY,pan,erase:e.button===2||G.tool==='erase'};if(!pan){G.cur=new Map();gact(e,gp.erase)}hud();gd()});
+  gcv.addEventListener('pointermove',e=>{G.hov=gfsOn()?null:gcell(e);hud();if(gp){if(gp.pan){G.cx=clamp(G.cx-(e.clientX-gp.x)/G.z,0,GW*TS);G.cy=clamp(G.cy-(e.clientY-gp.y)/G.z,0,GH*TS);gp.x=e.clientX;gp.y=e.clientY}else if(!gp.mv)gact(e,gp.erase)}gd()});
+  gcv.addEventListener('pointerup',()=>{if(G.mv){const f=G.mv.from,h=G.hov;if(h&&(h[0]!==f[0]||h[1]!==f[1])){gerase(f[0],f[1]);gplace(h[0],h[1],G.mv.id);tone(520,0,.05);gsave()}G.mv=null;gd()}gp=null;gcommit()});gcv.addEventListener('pointercancel',()=>{G.mv=null;gp=null;gcommit();gd()});gcv.addEventListener('pointerleave',()=>{if(!gp){G.hov=null;hud();gd()}});
   gcv.addEventListener('contextmenu',e=>e.preventDefault());
   function gzoomAt(d,cx,cy){const nz=clamp(G.z+d,1,6);if(nz===G.z)return;const b=gcv.getBoundingClientRect(),px=cx-b.left,py=cy-b.top,wx=(px-gcv.width/2)/G.z+G.cx,wy=(py-gcv.height/2)/G.z+G.cy;G.z=nz;G.cx=clamp(wx-(px-gcv.width/2)/nz,0,GW*TS);G.cy=clamp(wy-(py-gcv.height/2)/nz,0,GH*TS);$('#gzl').textContent=nz+'x';gd()}
   const gzoom=d=>{const b=gcv.getBoundingClientRect();gzoomAt(d,b.left+b.width/2,b.top+b.height/2)};
@@ -399,8 +407,9 @@ export function initApp() {
   gcv.addEventListener('pointerenter',()=>{G.over=true});gcv.addEventListener('pointerleave',()=>{G.over=false});gcv.addEventListener('pointermove',e=>{G.mx=e.clientX;G.my=e.clientY});
   gcv.addEventListener('mousedown',e=>{if(e.button===1)e.preventDefault()});
   $('#gzm').onclick=()=>{click();gzoom(-1)};$('#gzp').onclick=()=>{click();gzoom(1)};
-  $('#ggr').onclick=()=>{click();G.grid=!G.grid;gd()};$('#gce').onclick=()=>{click();G.cx=GW*TS/2;G.cy=GH*TS/2;gd()};
-  $('#gcl').onclick=async()=>{if(await ask('Remove everything you have placed in the garden?','CLEAR GARDEN','CLEAR GARDEN?')){G.cells.clear();gsave();click();gd()}};
+  $('#ggr').onclick=()=>{click();G.grid=!G.grid;$('#ggr').classList.toggle('on',G.grid);$('#ggr').setAttribute('aria-pressed',G.grid);gd()};$('#gund').onclick=()=>{click();gstep(false)};$('#gred').onclick=()=>{click();gstep(true)};
+  addEventListener('keydown',e=>{if(!$('#mg').classList.contains('open')||typing(e.target)||!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase();if(k==='z'||k==='y'){e.preventDefault();gstep(k==='y'||e.shiftKey)}});$('#gpvm').onclick=()=>{click();gzoom(-1)};$('#gpvp').onclick=()=>{click();gzoom(1)};$('#gce').onclick=()=>{click();G.cx=GW*TS/2;G.cy=GH*TS/2;gd()};
+  $('#gcl').onclick=async()=>{if(await ask('Remove everything you have placed in the garden?','CLEAR GARDEN','CLEAR GARDEN?')){G.cur=new Map();for(const k of G.cells.keys())gtouch(k);G.cells.clear();gcommit();gsave();click();gd()}};
   const toolUI=()=>document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===G.tool));
   document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{click();G.tool=b.dataset.tool;toolUI();gd()});
   const thumb=(it,m)=>{const s=Math.min(3,m/Math.max(it.w,it.h)),b=`width:${it.w*s}px;height:${it.h*s}px;`;return it.img?b+`background-image:url(${it.url});background-size:100% 100%`:b+`background-size:${AW*s}px ${AH*s}px;background-position:-${it.x*s}px -${it.y*s}px`};
@@ -445,7 +454,7 @@ export function initApp() {
   function tmv(d){const it=tcur();if(!it)return;click();const i=CT.indexOf(it);let j=i+d;while(j>=0&&j<CT.length&&CT[j].cat!==it.cat)j+=d;if(j<0||j>=CT.length)return;[CT[i],CT[j]]=[CT[j],CT[i]];CT.forEach((t,n)=>{if(t.order!==n+1){t.order=n+1;ctPut(t,false)}});tmUI();gpal()}
   $('#tml').onclick=()=>tmv(-1);$('#tmr').onclick=()=>tmv(1);
   $('#tdl').onclick=async()=>{const it=tcur();if(!it||!(await ask('Delete this tile and remove it from the garden?','DELETE TILE','DELETE TILE?')))return;click();CT.splice(CT.indexOf(it),1);CTM.delete(it.id);URL.revokeObjectURL(it.url);idb('readwrite',s=>s.delete(it.id),'tiles');
-   for(const[k,a]of[...G.cells]){const n=a.filter(x=>x!==it.id);if(n.length!==a.length){if(n.length)G.cells.set(k,n);else G.cells.delete(k)}}gsave();if(G.sel===it.id)G.sel=-1;TM.sel=null;tmUI();gpal();gd()};
+   for(const[k,a]of[...G.cells]){const n=a.filter(x=>x!==it.id);if(n.length!==a.length){if(n.length)G.cells.set(k,n);else G.cells.delete(k)}}gsave();ghClear();if(G.sel===it.id)G.sel=-1;TM.sel=null;tmUI();gpal();gd()};
   const tpos=e=>{const it=tcur(),b=$('#tec').getBoundingClientRect();return[Math.max(0,Math.min(it.w,Math.round((e.clientX-b.left)*it.w/b.width))),Math.max(0,Math.min(it.h,Math.round((e.clientY-b.top)*it.h/b.height)))]};
   let tcs=null;const tec=$('#tec');
   tec.addEventListener('pointerdown',e=>{if(!tcur())return;tec.setPointerCapture(e.pointerId);tcs=tpos(e);TM.crop={x:tcs[0],y:tcs[1],w:0,h:0};tdraw()});
@@ -591,7 +600,7 @@ export function initApp() {
 
   /* ---- garden fullscreen ---- */
   const gfsOn=()=>$('#mg').classList.contains('full');
-  function gfsSet(v){const m=$('#mg'),b=$('#gfs');m.classList.toggle('full',v);b.textContent=v?'EXIT FULL':'FULL';b.setAttribute('aria-pressed',v);
+  function gfsSet(v){const m=$('#mg'),b=$('#gfs');m.classList.toggle('full',v);b.dataset.tip=v?'Exit preview · Esc':'Full screen · preview your world';b.setAttribute('aria-label',v?'Exit full screen preview':'Full screen world preview');b.setAttribute('aria-pressed',v);G.hov=null;hud();
    if(v){if(m.requestFullscreen&&!document.fullscreenElement){const p=m.requestFullscreen();if(p&&p.catch)p.catch(()=>{})}}
    else if(document.fullscreenElement&&document.exitFullscreen){const p=document.exitFullscreen();if(p&&p.catch)p.catch(()=>{})}
    gd()}
@@ -599,6 +608,19 @@ export function initApp() {
   document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&gfsOn())gfsSet(false)});
   new MutationObserver(()=>{if(!$('#mg').classList.contains('open')&&gfsOn())gfsSet(false)}).observe($('#mg'),{attributes:true,attributeFilter:['class']});
   $('#bg').onclick=()=>{click();$('#gzl').textContent=G.z+'x';open('#mg',1);toolUI();gpal();gd()};
+  /* ---- tooltips for [data-tip] buttons: hover, keyboard focus, or press and hold on touch ---- */
+  {const tip=document.createElement('div');tip.id='tip';tip.setAttribute('role','tooltip');tip.hidden=true;document.body.appendChild(tip);let hideT,lp;
+   const show=el=>{clearTimeout(hideT);tip.textContent=el.dataset.tip;tip.hidden=false;const b=el.getBoundingClientRect(),t=tip.getBoundingClientRect();let x,y;
+    if(el.closest('.gl')&&innerWidth>=768){x=b.right+8;y=b.top+(b.height-t.height)/2}else{x=b.left+(b.width-t.width)/2;y=b.top<innerHeight/2?b.bottom+8:b.top-t.height-8}
+    tip.style.left=clamp(x,4,Math.max(4,innerWidth-t.width-4))+'px';tip.style.top=clamp(y,4,Math.max(4,innerHeight-t.height-4))+'px'};
+   const off=()=>{clearTimeout(hideT);tip.hidden=true},near=e=>e.target.closest&&e.target.closest('[data-tip]');
+   document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const el=near(e);if(el)show(el)});
+   document.addEventListener('pointerout',e=>{if(near(e))off()});
+   document.addEventListener('focusin',e=>{const el=near(e);if(el&&e.target.matches(':focus-visible'))show(el)});document.addEventListener('focusout',off);
+   document.addEventListener('pointerdown',e=>{off();clearTimeout(lp);if(e.pointerType!=='touch')return;const el=near(e);if(!el)return;lp=setTimeout(()=>{el.dataset.held='1';show(el);hideT=setTimeout(off,1800)},420)});
+   const stop=()=>clearTimeout(lp);document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop);document.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&Math.abs(e.movementX||0)+Math.abs(e.movementY||0)>2)stop()});
+   document.addEventListener('click',e=>{const el=near(e);if(el&&el.dataset.held){delete el.dataset.held;e.preventDefault();e.stopImmediatePropagation()}},true);  // a long press only shows the name
+   document.addEventListener('contextmenu',e=>{if(near(e))e.preventDefault()})}
   addEventListener('keydown',e=>{if($('#mg').classList.contains('open')&&e.key===' '&&!typing(e.target)){G.space=true;e.preventDefault()}});addEventListener('keyup',e=>{if(e.key===' ')G.space=false});
   /* ---- accessibility settings: font, text size, contrast, motion ---- */
   const A11Y={font:{id:'a11yfont',o:{pixel:'PIXEL',readable:'READABLE'}},text:{id:'a11ytext',o:{normal:'NORMAL',l:'LARGE',xl:'EXTRA'}},contrast:{id:'a11ycon',o:{normal:'NORMAL',high:'HIGH'}},motion:{id:'a11ymo',o:{auto:'AUTO',reduced:'REDUCED',full:'FULL'}}};

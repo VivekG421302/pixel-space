@@ -139,3 +139,9 @@ section at the end of `engine/app.js` wires them to the state.
 - Clock header row (`.fhead`): mode select, badge, then icon buttons `#pip` and `#auto` (icon-only; state is `aria-pressed` + `.on`, never `textContent`).
 - The visual progress bar is `sr-only` on the main clock (still drives `#hpb`, which the PiP window mirrors).
 - PiP window markup is built in `pipToggle()`; layouts are pure CSS under `.pip` (tall vs `@media(max-height:149px)`, hover / `:focus-within` reveal).
+
+## Garden and pixel creator UI
+- Icons: `src/components/PixelIcon.jsx` holds every icon as a 16 x 16 ASCII grid (`#` = pixel). `ToolButton.jsx` is the icon + small label button; its `tip` text is shown by the tooltip block in app.js (hover, keyboard focus, or long press on touch).
+- Garden layout is CSS only: desktop = tools | square canvas | tiles; phones (<768px) = tools row, square canvas, tiles below.
+- Garden undo/redo (`gstep`, `gcommit`) stores per-stroke diffs of the cells map; `ghClear()` after deleting a tile.
+- The icon inside the canvas (`#gfs`) toggles the full screen world preview (`.full` on `#mg`): canvas only, no grid or tools, drag to pan, zoom buttons, Esc exits.

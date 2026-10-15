@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import ToolButton from './ToolButton';
 
 // Static markup. Behaviour is attached by src/engine/app.js (see README).
 function PixelCreatorModal() {
@@ -7,21 +8,21 @@ function PixelCreatorModal() {
       <div className="box gwrap" role="dialog" aria-modal="true" aria-label="Pixel art creator">
         <div className="gtop">
           <b>PIXEL CREATOR</b>
-          <button className="gb sm on" data-px="pencil" title="Pencil (P)">PENCIL</button>
-          <button className="gb sm" data-px="eraser" title="Eraser (E)">ERASER</button>
-          <button className="gb sm" data-px="fill" title="Fill (F)">FILL</button>
-          <button className="gb sm" data-px="pick" title="Pick colour (I)">PICK</button>
-          <button className="gb sm" data-px="line" title="Line (L)">LINE</button>
-          <button className="gb sm" data-px="rect" title="Rectangle (R)">RECT</button>
-          <button className="gb sm" data-px="ref" title="Move reference (M)">MOVE REF</button>
+          <ToolButton icon="pencil" label="PENCIL" tip="Pencil · P" data-px="pencil" on />
+          <ToolButton icon="erase" label="ERASER" tip="Eraser · E" data-px="eraser" />
+          <ToolButton icon="fill" label="FILL" tip="Fill · F" data-px="fill" />
+          <ToolButton icon="pick" label="PICK" tip="Pick colour · I" data-px="pick" />
+          <ToolButton icon="line" label="LINE" tip="Line · L" data-px="line" />
+          <ToolButton icon="rect" label="RECT" tip="Rectangle · R" data-px="rect" />
+          <ToolButton icon="move" label="MOVE REF" tip="Move reference image · M" data-px="ref" />
           <span className="sp"></span>
-          <button className="gb sm" id="pxu">UNDO</button>
-          <button className="gb sm" id="pxr">REDO</button>
-          <button className="gb sm" id="pxzm" aria-label="Zoom out">−</button>
+          <ToolButton icon="undo" label="UNDO" tip="Undo · Ctrl+Z" id="pxu" />
+          <ToolButton icon="redo" label="REDO" tip="Redo · Ctrl+Y" id="pxr" />
+          <ToolButton icon="zoomout" label="ZOOM -" tip="Zoom out · Ctrl and minus" id="pxzm" />
           <b id="pxzl">8x</b>
-          <button className="gb sm" id="pxzp" aria-label="Zoom in">+</button>
-          <button className="gb sm" id="pxgr">GRID</button>
-          <button className="gb sm" data-close="" aria-label="Close">✕</button>
+          <ToolButton icon="zoomin" label="ZOOM +" tip="Zoom in · Ctrl and plus" id="pxzp" />
+          <ToolButton icon="grid" label="GRID" tip="Grid · G" id="pxgr" />
+          <ToolButton icon="close" label="CLOSE" tip="Close the pixel creator · Esc" data-close="" />
         </div>
         <div className="pxmain">
           <div className="pxview" id="pxview">
@@ -76,7 +77,7 @@ function PixelCreatorModal() {
                 </select>
               </label>
               <button className="gb sm" id="pxfl">RECT FILL: OFF</button>
-              <button className="gb sm" id="pxcl">CLEAR</button>
+              <ToolButton icon="trash" label="CLEAR" tip="Clear the whole canvas (you can undo)" id="pxcl" />
             </div>
             <div className="pxsec">REFERENCE IMAGE</div>
             <div className="cbar">
@@ -128,10 +129,10 @@ function PixelCreatorModal() {
         </div>
         <div className="pxdock">
           <input type="color" id="pxcol" defaultValue="#383838" aria-label="Colour" />
-          <button className="gb sm" id="pxadd">+ ADD</button>
-          <button className="gb sm" id="pxdel">REMOVE</button>
+          <ToolButton icon="plus" label="ADD" tip="Add this colour to the palette" id="pxadd" />
+          <ToolButton icon="close" label="REMOVE" tip="Remove the selected colour from the palette" id="pxdel" />
           <div className="pxpal" id="pxpal"></div>
-          <button className="gb sm" id="pxex">FROM REF</button>
+          <ToolButton icon="image" label="FROM REF" tip="Build a palette from the reference image" id="pxex" />
           <span className="text-[length:calc(10px*var(--ts))] opacity-[.86]" id="pxpos"></span>
         </div>
       </div>
