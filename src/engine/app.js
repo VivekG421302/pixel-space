@@ -183,7 +183,7 @@ export function initApp() {
   function chimeThenNext(){const was=phase;chiming=true;chimeLong();announce(was==='focus'?'Focus session finished. Break starts in 5 seconds.':'Break over. Focus starts in 5 seconds.');react('done');
    chimeT=setTimeout(()=>{if(!chiming)return;chiming=false;flipPhase();run=true;endAt=Date.now()+left*1000;tick=setInterval(loop,250);annKey=phase+run;announce(phase==='focus'?`Focus started. ${Math.round(total()/60)} minutes.`:'Break started.');react('play');ui()},CHIME_MS)}
   function stopChime(advance){if(!chiming)return;clearTimeout(chimeT);chiming=false;if(advance)flipPhase()}
-  function autoUI(){const b=$('#auto'),s=$('#autos');if(b){b.textContent='AUTO: '+(S.auto?'ON':'OFF');b.classList.toggle('on',!!S.auto);b.setAttribute('aria-pressed',!!S.auto)}if(s){s.textContent=S.auto?'ON':'OFF';s.classList.toggle('on',!!S.auto);s.setAttribute('aria-pressed',!!S.auto)}}
+  function autoUI(){const b=$('#auto'),s=$('#autos');if(b){b.classList.toggle('on',!!S.auto);b.setAttribute('aria-pressed',!!S.auto);b.title='Auto cycle: '+(S.auto?'ON':'OFF')+' (focus, chime, break, chime, repeat)'}if(s){s.textContent=S.auto?'ON':'OFF';s.classList.toggle('on',!!S.auto);s.setAttribute('aria-pressed',!!S.auto)}}
   function autoSet(v){S.auto=v;save();click();if(v&&!run&&!chiming)toggle();else ui();announce(v?'Auto cycle on.':'Auto cycle off.')}
   $('#auto').onclick=()=>autoSet(!S.auto);$('#autos').onclick=()=>autoSet(!S.auto);
 
@@ -192,14 +192,14 @@ export function initApp() {
   const pipCan=()=>'documentPictureInPicture' in window||!!(document.pictureInPictureEnabled&&HTMLVideoElement.prototype.requestPictureInPicture);
   const pipTime=()=>{const s=Math.max(0,Math.ceil(left));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
   const pipLabel=()=>chiming?'DING!':phase==='focus'?'FOCUS':'REST';
-  function pipBtn(){const b=$('#pip');if(!b)return;const on=!!(pipWin||pipVid);b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);b.textContent=on?'PIP: ON':'PIP';if(!pipCan()){b.disabled=true;b.title='Picture in picture is not supported in this browser'}}
+  function pipBtn(){const b=$('#pip');if(!b)return;const on=!!(pipWin||pipVid);b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);b.title=on?'Close the floating clock':'Pop the clock out into a small floating window';if(!pipCan()){b.disabled=true;b.title='Picture in picture is not supported in this browser'}}
   function pipDraw(){if(!pipCv)return;const c=pipCv.getContext('2d'),cs=getComputedStyle(document.documentElement),v=n=>cs.getPropertyValue(n).trim()||'#000',W=pipCv.width,H=pipCv.height,pc=Math.max(0,Math.min(1,left/total())),f='"Press Start 2P", monospace';
    c.fillStyle=v('--box');c.fillRect(0,0,W,H);c.strokeStyle=v('--line');c.lineWidth=8;c.strokeRect(4,4,W-8,H-8);
    c.textAlign='center';c.textBaseline='middle';
    const lb=pipLabel();c.font='20px '+f;const bw=c.measureText(lb).width+28;c.fillStyle=v('--acc');c.fillRect((W-bw)/2,28,bw,36);c.fillStyle='#fff';c.fillText(lb,W/2,47);
    c.fillStyle=v('--ink');c.font='64px '+f;c.fillText(pipTime(),W/2,H/2+14);
    c.fillStyle=v('--panel');c.fillRect(30,H-58,W-60,22);c.fillStyle=pc>.5?'#48d848':pc>.2?'#f8d030':'#f85838';c.fillRect(30,H-58,(W-60)*pc,22);c.strokeStyle=v('--line');c.lineWidth=4;c.strokeRect(30,H-58,W-60,22)}
-  function pipUI(){if(pipWin){const d=pipWin.document,g=id=>d.getElementById(id);if(!g('pt'))return;g('pb').textContent=pipLabel();g('pt').textContent=pipTime();const h=$('#hpb');g('ph').style.width=h.style.width;g('ph').style.background=h.style.background;g('pplay').textContent=$('#plabel').textContent;d.title=pipTime()+' · Focus Quest';
+  function pipUI(){if(pipWin){const d=pipWin.document,g=id=>d.getElementById(id);if(!g('pt'))return;g('pb').textContent=pipLabel();{const t=pipTime();g('pm').textContent=t.slice(0,2);g('ps').textContent=t.slice(3);g('pt').setAttribute('aria-label',`${pipLabel()} ${+t.slice(0,2)} minutes ${+t.slice(3)} seconds`)}const h=$('#hpb');g('ph').style.width=h.style.width;g('ph').style.background=h.style.background;g('pplay').textContent=$('#plabel').textContent;d.title=pipTime()+' · Focus Quest';
     const r=document.documentElement;d.documentElement.dataset.theme=r.dataset.theme;d.documentElement.dataset.scheme=r.dataset.scheme;d.documentElement.style.cssText=r.style.cssText}
    else if(pipVid)pipDraw()}
   function pipClosed(){pipWin=null;pipVid=null;pipCv=null;pipBtn()}
@@ -208,13 +208,14 @@ export function initApp() {
    if(pipVid){try{await document.exitPictureInPicture()}catch(e){}pipClosed();return}
    try{
     if('documentPictureInPicture' in window){
-     const w=await window.documentPictureInPicture.requestWindow({width:340,height:210});pipWin=w;
+     const w=await window.documentPictureInPicture.requestWindow({width:340,height:S.pipSize==='xs'?100:210});pipWin=w;
      document.querySelectorAll('link[rel=stylesheet]').forEach(n=>{const l=w.document.createElement('link');l.rel='stylesheet';l.href=n.href;w.document.head.appendChild(l)});
      document.querySelectorAll('style').forEach(n=>w.document.head.appendChild(n.cloneNode(true)));
      w.document.body.className=document.body.className;
-     w.document.body.innerHTML='<div class="pip"><span class="bdg" id="pb"></span><div class="pt" id="pt" role="timer"></div><div class="pbar" aria-hidden="true"><div id="ph"></div></div><div class="pc"><button class="gb sm" id="pplay"></button><button class="gb sm" id="pskip">SKIP</button></div></div>';
-     w.document.getElementById('pplay').onclick=()=>$('#play').click();w.document.getElementById('pskip').onclick=()=>$('#skip').click();
-     w.addEventListener('pagehide',pipClosed);
+     w.document.body.innerHTML='<div class="pip" role="timer" id="pt"><span class="bdg" id="pb"></span><div class="pdig" aria-hidden="true"><div class="dg" id="pm"></div><div class="colon"><i></i><i></i></div><div class="dg" id="ps"></div></div><div class="pbar" aria-hidden="true"><div id="ph"></div></div><div class="pc"><button class="gb sm" id="prst">RESET</button><button class="gb sm" id="pplay"></button><button class="gb sm" id="pskip">SKIP</button></div></div>';
+     {const g=id=>w.document.getElementById(id);g('prst').onclick=()=>$('#reset').click();g('pplay').onclick=()=>$('#play').click();g('pskip').onclick=()=>$('#skip').click();
+      w.document.body.addEventListener('dblclick',e=>{if(e.target.closest('button'))return;try{w.resizeTo(w.outerWidth,w.innerHeight<150?210:100+(w.outerHeight-w.innerHeight))}catch(x){}})}
+     w.addEventListener('pagehide',pipClosed);w.addEventListener('resize',()=>{const z=w.innerHeight<150?'xs':'sm';if(S.pipSize!==z){S.pipSize=z;save()}});
     }else{
      pipCv=document.createElement('canvas');pipCv.width=480;pipCv.height=270;pipDraw();
      const v=document.createElement('video');v.muted=true;v.playsInline=true;v.srcObject=pipCv.captureStream(10);await v.play();pipVid=v;
@@ -227,13 +228,13 @@ export function initApp() {
 
   /* ---- PWA: install, offline and updates (the state lives in src/pwa.js) ---- */
   let pwaAsked=false,pwaHeard=false;
-  function pwaUI(){const ib=$('#install'),si=$('#pwai'),st=$('#pwast'),h=$('#pwah'),pu=$('#pwau');if(!st)return;
+  function pwaUI(){const ib=$('#minst'),si=$('#pwai'),st=$('#pwast'),h=$('#pwah'),pu=$('#pwau');if(!st)return;
    const can=!!pwa.installEvent&&!pwa.installed,ready=pwa.offlineReady||!!(navigator.serviceWorker&&navigator.serviceWorker.controller);
-   if(ib)ib.hidden=!can;si.disabled=!can;si.textContent=pwa.installed?'INSTALLED':'INSTALL';
+   if(ib)ib.hidden=pwa.installed||!pwa.supported;si.disabled=!can;si.textContent=pwa.installed?'INSTALLED':'INSTALL';
    st.textContent=import.meta.env.DEV?'Offline support and updates are active in the built app (npm run build, then npm run preview).':!pwa.supported?'This browser cannot install the app or run it offline.':[pwa.installed?'Running as an installed app.':'Running in the browser.',ready?'Works offline.':'Preparing offline use...',navigator.onLine?'':'You are offline.',pwa.needRefresh?'An update is ready.':''].filter(Boolean).join(' ');
    h.textContent=pwa.installed||can||!pwa.supported?'':pwa.ios?'On iPhone or iPad: tap Share, then Add to Home Screen.':'Your browser offers to install the app when it is ready (look for an install icon in the address bar or the browser menu).';
    pu.textContent=pwa.needRefresh?'RELOAD':'CHECK NOW'}
-  $('#install').onclick=$('#pwai').onclick=async()=>{click();if(await promptInstall()==='accepted')announce('Installing Focus Quest.')};
+  $('#minst').onclick=$('#pwai').onclick=async()=>{click();if(pwa.installEvent){if(await promptInstall()==='accepted')announce('Installing Focus Quest.')}else{const m=pwa.ios?'On iPhone or iPad: tap Share, then Add to Home Screen.':'Use the install icon in your browser address bar or menu.';say(m);announce(m)}};
   $('#pwau').onclick=async()=>{click();if(pwa.needRefresh){pwa.update(true);return}const b=$('#pwau');
    if(!pwa.registration){announce('Updates are checked automatically in the built app.');return}
    b.textContent='CHECKING...';try{await pwa.registration.update()}catch(e){}
@@ -291,7 +292,7 @@ export function initApp() {
   addEventListener('resize',()=>{size();ledges()});
   /* ---- keyboard shortcuts (configurable; paused while typing or in dialogs) ---- */
   /* ---- game-style menu ---- */
-  const mnItems=()=>[...document.querySelectorAll('#mlist .mi')];let mnI=0;
+  const mnItems=()=>[...document.querySelectorAll('#mlist .mi:not([hidden])')];let mnI=0;
   const mnSet=i=>{const a=mnItems();mnI=(i+a.length)%a.length;a.forEach((b,n)=>b.classList.toggle('on',n===mnI))};
   $('#mlist').addEventListener('mouseover',e=>{const b=e.target.closest('.mi');if(b)mnSet(mnItems().indexOf(b))});
   $('#mlist').addEventListener('click',e=>{const b=e.target.closest('.mi');if(!b)return;if(b.id==='mth'){click();themeNext();return}if(b.id==='mdk'){click();schemeNext();return}if(b.id==='mks'){click();open('#mnu',0);settings();open('#ms',1);setTimeout(()=>{const k=$('#keys');if(k)k.scrollIntoView({block:'start'})},60);return}open('#mnu',0);const go=b.dataset.go;if(go)$(go).click()});

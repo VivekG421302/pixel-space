@@ -52,7 +52,7 @@ countdown. A chime plays when a phase ends, and the status line shows a random m
 cycle: focus, a 5 second chime, break, a 5 second chime, then focus again, and so on (25 / 5 minutes in Pomodoro).
 Turning it on starts the timer; turning it off lets the current phase finish and stop as usual.
 
-**Picture in picture:** the **PIP** button pops the clock out into a small always-on-top window with Start / Pause and
+**Picture in picture:** the **PIP** icon (top right of the clock) pops the clock out into a small always-on-top window with Start / Pause and
 Skip buttons (Document Picture-in-Picture in Chrome and Edge; a video-based PiP in browsers that only support that).
 
 ### Missions (tasks) and calendar
@@ -86,7 +86,7 @@ The banner above the timer keeps a fixed 3:1 shape (images are cropped to fit, n
 
 ### Installable app (PWA)
 Focus Quest is a Progressive Web App.
-- **Install:** an **INSTALL APP** button appears under the timer controls when your browser offers installation (Chrome, Edge, Android),
+- **Install:** **MENU → INSTALL APP** installs it when your browser offers installation (Chrome, Edge, Android; elsewhere it shows how),
   and Settings → App has an **Install** button. On iPhone and iPad use Share → Add to Home Screen. The installed app opens in its own window.
 - **Offline:** after the first visit everything (timer, tasks, garden, tiles, pixel creator, fonts) works without a connection. Buddy facts and
   jokes fall back to the built-in lines when offline. Your data never leaves the browser, so nothing needs to sync.

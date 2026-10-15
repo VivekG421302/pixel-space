@@ -59,7 +59,7 @@ Unlike the rest of the UI, auth is a **real React feature** in `src/auth/` (stat
 - `vite.config.js` configures `vite-plugin-pwa` (manifest, Workbox precache of the build, Google Fonts runtime cache, `/api` excluded from
   the navigation fallback). `registerType: 'prompt'`: a new service worker waits until the user accepts the reload.
 - `src/pwa.js` registers the worker and holds the state (`pwa`: `offlineReady`, `needRefresh`, `installEvent`, `installed`); it emits the window event
-  `fq:pwa`. The engine's "PWA" section renders it (`#install` button on the timer, Settings → App) and asks before reloading (not while a timer runs).
+  `fq:pwa`. The engine's "PWA" section renders it (`#minst` menu item, Settings → App `#pwai`) and asks before reloading (not while a timer runs).
 - The worker only exists in production builds. Test with `npm run build && npm run preview`. Never cache `/api` or auth responses.
 - Icons: `scripts/make-pwa-icons.py` -> `public/icons/`. If you add a new top-level static file type, add it to `workbox.globPatterns`.
 - `vercel.json` serves `/sw.js` with `no-cache` so updates are picked up.
@@ -134,3 +134,8 @@ section at the end of `engine/app.js` wires them to the state.
 - Port features from `engine/app.js` into hooks and components one at a time.
 - No automated tests yet (the auth flows were verified end to end against `scripts/mock-api.mjs` with Playwright). A Playwright smoke test (timer, tasks, banner upload, garden paint, pixel creator)
   would be a good first addition.
+
+## Clock header and PiP
+- Clock header row (`.fhead`): mode select, badge, then icon buttons `#pip` and `#auto` (icon-only; state is `aria-pressed` + `.on`, never `textContent`).
+- The visual progress bar is `sr-only` on the main clock (still drives `#hpb`, which the PiP window mirrors).
+- PiP window markup is built in `pipToggle()`; layouts are pure CSS under `.pip` (tall vs `@media(max-height:149px)`, hover / `:focus-within` reveal).

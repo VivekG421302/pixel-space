@@ -21,6 +21,7 @@ function MenuModal() {
           <button className="mi" id="mdk" role="menuitem">DARK MODE: <span id="mdkn">LIGHT</span></button>
           <button className="mi" id="mth" role="menuitem">THEME: <span id="mthn">LEAF</span></button>
           <button className="mi" id="mks" role="menuitem">KEYBOARD SHORTCUTS</button>
+          <button className="mi" id="minst" role="menuitem" hidden>INSTALL APP</button>
           <button className="mi" data-close="" role="menuitem">RESUME</button>
           <div className="msep" aria-hidden="true"></div>
           <AccountMenuItem />
