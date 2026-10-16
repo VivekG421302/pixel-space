@@ -1,5 +1,8 @@
 import { memo } from 'react';
 import ToolButton from './ToolButton';
+import IconButton from './IconButton';
+import PixelIcon from './PixelIcon';
+import HScroll from './HScroll';
 
 // Static markup. Behaviour is attached by src/engine/app.js (see README).
 function PixelCreatorModal() {
@@ -36,18 +39,18 @@ function PixelCreatorModal() {
               <div className="lyr" data-ly="ref">
                 <button type="button" className="lyrsel" aria-pressed="false">
                   <span className="lyn">1</span>
-                  <svg className="lyi" viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><rect x="1" y="2" width="14" height="12" fill="none" stroke="currentColor" strokeWidth="2" /><rect x="10" y="5" width="2" height="2" fill="currentColor" /><path d="M3 12 L6 8 L8 10 L10 8 L13 12 Z" fill="currentColor" /></svg>
+                  <span className="lyi"><PixelIcon name="image" size={24} /></span>
                   <span className="lyt"><b>REFERENCE</b><small id="lyrs">IMAGE · none</small></span>
                 </button>
-                <button className="gb sm lye" id="lyre" aria-label="Show or hide the reference layer" title="Show / hide"><svg viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M1 8 L4 4 H12 L15 8 L12 12 H4 Z" fill="none" stroke="currentColor" strokeWidth="2" /><rect className="ep" x="7" y="6" width="3" height="4" fill="currentColor" /><path className="es" d="M2 14 L14 2" stroke="currentColor" strokeWidth="2" /></svg></button>
+                <button className="gb sm lye" id="lyre" aria-label="Show or hide the reference layer" title="Show / hide"><span className="ep"><PixelIcon name="eye" size={20} /></span><span className="es"><PixelIcon name="eyeoff" size={20} /></span></button>
               </div>
               <div className="lyr on" data-ly="draw">
                 <button type="button" className="lyrsel" aria-pressed="true">
                   <span className="lyn">2</span>
-                  <svg className="lyi" viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M11 1 L15 5 L5 15 L1 15 L1 11 Z" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M9 3 L13 7" stroke="currentColor" strokeWidth="2" /></svg>
+                  <span className="lyi"><PixelIcon name="pencil" size={24} /></span>
                   <span className="lyt"><b>DRAWING</b><small>PIXELS</small></span>
                 </button>
-                <button className="gb sm lye" id="lyde" aria-label="Show or hide the drawing layer" title="Show / hide"><svg viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges"><path d="M1 8 L4 4 H12 L15 8 L12 12 H4 Z" fill="none" stroke="currentColor" strokeWidth="2" /><rect className="ep" x="7" y="6" width="3" height="4" fill="currentColor" /><path className="es" d="M2 14 L14 2" stroke="currentColor" strokeWidth="2" /></svg></button>
+                <button className="gb sm lye" id="lyde" aria-label="Show or hide the drawing layer" title="Show / hide"><span className="ep"><PixelIcon name="eye" size={20} /></span><span className="es"><PixelIcon name="eyeoff" size={20} /></span></button>
               </div>
             </div>
             <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-2">Layer 1 sits under layer 2. Click a layer to work on it. Only layer 2 is saved as the tile.</p>
@@ -64,7 +67,7 @@ function PixelCreatorModal() {
               <input id="pxw" type="number" min="4" max="256" style={{width: '72px'}} aria-label="Width" />
               <span>x</span>
               <input id="pxh" type="number" min="4" max="256" style={{width: '72px'}} aria-label="Height" />
-              <button className="gb sm" id="pxap">SET</button>
+              <IconButton icon="check" id="pxap">SET</IconButton>
             </div>
             <div className="cbar" style={{marginTop: '10px'}}>
               <label className="text-[length:calc(10px*var(--ts))]">
@@ -76,14 +79,14 @@ function PixelCreatorModal() {
                   <option>4</option>
                 </select>
               </label>
-              <button className="gb sm" id="pxfl">RECT FILL: OFF</button>
+              <IconButton icon="rectfill" id="pxfl">RECT FILL: OFF</IconButton>
               <ToolButton icon="trash" label="CLEAR" tip="Clear the whole canvas (you can undo)" id="pxcl" />
             </div>
             <div className="pxsec">REFERENCE IMAGE</div>
             <div className="cbar">
-              <button className="gb sm on" id="pxrl">LOAD</button>
-              <button className="gb sm" id="pxrfit">FIT</button>
-              <button className="gb sm" id="pxrx">REMOVE</button>
+              <IconButton icon="image" className="on" id="pxrl">LOAD</IconButton>
+              <IconButton icon="full" id="pxrfit">FIT</IconButton>
+              <IconButton icon="trash" id="pxrx">REMOVE</IconButton>
             </div>
             <label className="fld" style={{marginTop: '8px'}}>
               Opacity
@@ -94,7 +97,7 @@ function PixelCreatorModal() {
               <input type="range" id="pxrs" min="10" max="400" defaultValue="100" />
             </label>
             <div className="cbar">
-              <button className="gb sm" id="pxtr">TRACE TO PALETTE</button>
+              <IconButton icon="wand" id="pxtr">TRACE TO PALETTE</IconButton>
             </div>
             <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-2">
               Drag the image into place with MOVE REF. PICK also samples the reference where a cell is empty.
@@ -117,12 +120,12 @@ function PixelCreatorModal() {
               </select>
             </label>
             <div className="cbar">
-              <button className="gb sm" id="pxtm">TRIM EDGES: OFF</button>
+              <IconButton icon="rect" id="pxtm">TRIM EDGES: OFF</IconButton>
             </div>
             <div className="cbar" style={{marginTop: '10px'}}>
-              <button className="gb sm on" id="pxad">ADD TO TILES</button>
-              <button className="gb sm" id="pxup" style={{display: 'none'}}>UPDATE TILE</button>
-              <button className="gb sm" id="pxpn">PNG</button>
+              <IconButton icon="plus" className="on" id="pxad">ADD TO TILES</IconButton>
+              <IconButton icon="check" id="pxup" style={{display: 'none'}}>UPDATE TILE</IconButton>
+              <IconButton icon="download" id="pxpn">PNG</IconButton>
             </div>
             <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-3" id="pxmsg">Pick a colour, then click the grid to draw. Your palette and draft are saved.</p>
           </div>
@@ -131,7 +134,7 @@ function PixelCreatorModal() {
           <input type="color" id="pxcol" defaultValue="#383838" aria-label="Colour" />
           <ToolButton icon="plus" label="ADD" tip="Add this colour to the palette" id="pxadd" />
           <ToolButton icon="close" label="REMOVE" tip="Remove the selected colour from the palette" id="pxdel" />
-          <div className="pxpal" id="pxpal"></div>
+          <HScroll className="pxpalhs" trackClass="pxpal" id="pxpal"></HScroll>
           <ToolButton icon="image" label="FROM REF" tip="Build a palette from the reference image" id="pxex" />
           <span className="text-[length:calc(10px*var(--ts))] opacity-[.86]" id="pxpos"></span>
         </div>

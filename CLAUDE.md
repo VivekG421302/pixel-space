@@ -145,3 +145,9 @@ section at the end of `engine/app.js` wires them to the state.
 - Garden layout is CSS only: desktop = tools | square canvas | tiles; phones (<768px) = tools row, square canvas, tiles below.
 - Garden undo/redo (`gstep`, `gcommit`) stores per-stroke diffs of the cells map; `ghClear()` after deleting a tile.
 - The icon inside the canvas (`#gfs`) toggles the full screen world preview (`.full` on `#mg`): canvas only, no grid or tools, drag to pan, zoom buttons, Esc exits.
+
+## Pages, scroll rows, cursors, dungeon sections
+- Every screen except the confirm box is a page with its own address (`#/menu`, `#/settings`, `#/garden`, `#/draw`, `#/tiles`, `#/banners`, `#/import`, `#/about`). `open(id, 1)` in app.js pushes a history entry, so Back works; closing and opening in the same tick replaces the entry. Routes live in `ROUTES`; add new pages there.
+- `HScroll.jsx` wraps any horizontally scrolling row; arrows appear only when there is more to scroll to.
+- Cursors: `iconCursor()` in `src/data/pixelIcons.js` builds a CSS cursor from an icon. Garden cursors are set in `gcur()`, creator cursors in `pxtool()`.
+- The four atlas DUNGEON categories show as one DUNGEON category. Its sections come from `DSEC` / `DSEC_ORDER` in app.js (derived from the atlas groups; exact per-sheet sections need the original `Tiled_files` sheets).

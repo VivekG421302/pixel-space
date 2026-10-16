@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import PixelIcon from './PixelIcon';
 import ToolButton from './ToolButton';
+import HScroll from './HScroll';
 
 // Static markup. Behaviour is attached by src/engine/app.js (see README).
 // Desktop: tools on the left, the square world canvas in the middle, tiles on the right.
@@ -11,7 +12,7 @@ function GardenModal() {
       <div className="box gwrap" role="dialog" aria-modal="true" aria-label="Garden">
         <div className="gside gl">
           <b className="gtitle">GARDEN</b>
-          <div className="gtools" role="group" aria-label="Garden tools">
+          <HScroll className="gtoolhs" trackClass="gtools" role="group" aria-label="Garden tools">
             <ToolButton icon="paint" label="PAINT" tip="Paint · place the selected tile (click or drag)" data-tool="paint" on />
             <ToolButton icon="erase" label="ERASE" tip="Erase · remove the top tile (or right click)" data-tool="erase" />
             <ToolButton icon="move" label="MOVE" tip="Move · drag a placed tile to another cell" data-tool="move" />
@@ -26,7 +27,7 @@ function GardenModal() {
             <ToolButton icon="pencil" label="DRAW" tip="Pixel creator · draw a new tile" id="gpx" />
             <ToolButton icon="trash" label="CLEAR" tip="Clear · remove everything from the garden" id="gcl" />
             <ToolButton icon="close" label="CLOSE" tip="Close the garden · Esc" className="gclose" data-close="" />
-          </div>
+          </HScroll>
         </div>
         <div className="gmid">
           <div id="gview">
@@ -44,7 +45,7 @@ function GardenModal() {
           </div>
         </div>
         <div className="gside gr">
-          <div className="gtabs"><span id="gtb" className="gtabs"></span></div>
+          <HScroll className="gtabs" trackClass="gtabs-track" id="gtb"></HScroll>
           <div id="gpal"></div>
           <span className="ghint">Click paints · right click erases · MOVE drags a tile · 2 layers per tile</span>
         </div>
