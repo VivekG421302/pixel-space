@@ -4,13 +4,77 @@ import IconButton from './IconButton';
 import PixelIcon from './PixelIcon';
 import HScroll from './HScroll';
 
-// Static markup. Behaviour is attached by src/engine/app.js (see README).
+// Collapsible group of options. Native <details> keeps it keyboard and screen reader friendly.
+function Section({ icon, title, id, open = false, children }) {
+  return (
+    <details className="acc" id={id} open={open}>
+      <summary>
+        <PixelIcon name={icon} size={20} />
+        <span className="acct">{title}</span>
+        <span className="accc"><PixelIcon name="down" size={16} /></span>
+      </summary>
+      <div className="accb">{children}</div>
+    </details>
+  );
+}
+
+// Static markup. Behaviour is attached by src/engine/app.js (see CLAUDE.md).
+// Desktop: tools | canvas with colours above it | options. Phone: one page that scrolls vertically:
+// top bar, colours, canvas, tools (two rows that scroll sideways), then the options.
 function PixelCreatorModal() {
   return (
     <div className="modal gmodal" id="mp">
-      <div className="box gwrap" role="dialog" aria-modal="true" aria-label="Pixel art creator">
-        <div className="gtop">
-          <b>PIXEL CREATOR</b>
+      <div className="box pxapp" role="dialog" aria-modal="true" aria-label="Pixel art creator">
+        <header className="pxbar">
+          <ToolButton icon="left" label="HOME" tip="Home · leave the pixel creator" className="pxhome" data-close="" />
+          <label className="pxtitle" data-tip="Sprite title · click to rename">
+            <input id="pxtt" defaultValue="pixel art" maxLength="24" aria-label="Sprite title" autoComplete="off" />
+            <PixelIcon name="pencil" size={18} />
+          </label>
+          <ToolButton icon="save" label="FINISH" tip="Finish · save your sprite" className="pxfinish" id="pxfin" />
+        </header>
+        <div className="pxcolrow">
+          <input type="color" id="pxcol" defaultValue="#383838" aria-label="Colour" />
+          <HScroll className="pxpalhs" trackClass="pxpal" id="pxpal" aria-label="Palette"></HScroll>
+          <ToolButton icon="plus" label="ADD" tip="Add this colour to the palette" className="mini" id="pxadd" />
+          <ToolButton icon="close" label="REMOVE" tip="Remove the selected colour from the palette" className="mini" id="pxdel" />
+        </div>
+        <div className="pxstage">
+          <div className="pxview" id="pxview">
+            <div className="pxwrap">
+              <canvas id="pxc"></canvas>
+            </div>
+          </div>
+          <button type="button" className="gb pxchip pxgs" id="pxgs" aria-expanded="false" aria-controls="pxgp" data-tip="Grid size · click to change">
+            <span id="pxgst">32 x 32</span>
+            <PixelIcon name="pencil" size={16} />
+          </button>
+          <div className="box pxgp pxgcfg" id="pxgp" hidden role="group" aria-label="Grid size">
+            <div className="cbar" id="pxs">
+              <button className="gb sm" data-s="8">8</button>
+              <button className="gb sm" data-s="16">16</button>
+              <button className="gb sm on" data-s="32">32</button>
+              <button className="gb sm" data-s="64">64</button>
+              <button className="gb sm" data-s="128">128</button>
+              <button className="gb sm" data-s="256">256</button>
+            </div>
+            <div className="cbar" style={{marginTop: '8px'}}>
+              <input className="pxw" id="pxw" type="number" min="4" max="256" style={{width: '72px'}} aria-label="Width" />
+              <span>x</span>
+              <input className="pxh" id="pxh" type="number" min="4" max="256" style={{width: '72px'}} aria-label="Height" />
+              <IconButton icon="check" className="pxap" id="pxap">SET</IconButton>
+            </div>
+          </div>
+          <button type="button" className="gb sq pxchip pxgrid" id="pxgr" aria-pressed="true" aria-label="Grid lines" data-tip="Grid lines · G"><PixelIcon name="grid" size={22} /></button>
+          <div className="pxzoom" role="group" aria-label="Zoom">
+            <button type="button" className="gb sq" id="pxzl" data-tip="Zoom level · click to fit the canvas" aria-label="Fit canvas to the screen">8x</button>
+            <button type="button" className="gb sq" id="pxzp" data-tip="Zoom in · Ctrl and plus" aria-label="Zoom in"><PixelIcon name="zoomin" size={20} /></button>
+            <button type="button" className="gb sq" id="pxzm" data-tip="Zoom out · Ctrl and minus" aria-label="Zoom out"><PixelIcon name="zoomout" size={20} /></button>
+          </div>
+          <span className="pxpos" id="pxpos"></span>
+          <div className="pxtoast" id="pxtoast" role="status" aria-live="polite"></div>
+        </div>
+        <HScroll className="pxtoolhs" trackClass="pxtools" role="group" aria-label="Drawing tools">
           <ToolButton icon="pencil" label="PENCIL" tip="Pencil · P" data-px="pencil" on />
           <ToolButton icon="erase" label="ERASER" tip="Eraser · E" data-px="eraser" />
           <ToolButton icon="fill" label="FILL" tip="Fill · F" data-px="fill" />
@@ -18,23 +82,12 @@ function PixelCreatorModal() {
           <ToolButton icon="line" label="LINE" tip="Line · L" data-px="line" />
           <ToolButton icon="rect" label="RECT" tip="Rectangle · R" data-px="rect" />
           <ToolButton icon="move" label="MOVE REF" tip="Move reference image · M" data-px="ref" />
-          <span className="sp"></span>
+          <ToolButton icon="trash" label="CLEAR" tip="Clear the whole canvas (you can undo)" id="pxcl" />
           <ToolButton icon="undo" label="UNDO" tip="Undo · Ctrl+Z" id="pxu" />
           <ToolButton icon="redo" label="REDO" tip="Redo · Ctrl+Y" id="pxr" />
-          <ToolButton icon="zoomout" label="ZOOM -" tip="Zoom out · Ctrl and minus" id="pxzm" />
-          <b id="pxzl">8x</b>
-          <ToolButton icon="zoomin" label="ZOOM +" tip="Zoom in · Ctrl and plus" id="pxzp" />
-          <ToolButton icon="grid" label="GRID" tip="Grid · G" id="pxgr" />
-          <ToolButton icon="close" label="CLOSE" tip="Close the pixel creator · Esc" data-close="" />
-        </div>
-        <div className="pxmain">
-          <div className="pxview" id="pxview">
-            <div className="pxwrap">
-              <canvas id="pxc"></canvas>
-            </div>
-          </div>
-          <div className="pxside">
-            <div className="pxsec">LAYERS</div>
+        </HScroll>
+        <div className="pxopts">
+          <Section icon="layers" title="LAYERS" id="pxlayers" open>
             <div className="lyrs">
               <div className="lyr" data-ly="ref">
                 <button type="button" className="lyrsel" aria-pressed="false">
@@ -54,24 +107,11 @@ function PixelCreatorModal() {
               </div>
             </div>
             <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-2">Layer 1 sits under layer 2. Click a layer to work on it. Only layer 2 is saved as the tile.</p>
-            <div className="pxsec">CANVAS SIZE</div>
-            <div className="cbar" id="pxs">
-              <button className="gb sm" data-s="8">8</button>
-              <button className="gb sm" data-s="16">16</button>
-              <button className="gb sm on" data-s="32">32</button>
-              <button className="gb sm" data-s="64">64</button>
-              <button className="gb sm" data-s="128">128</button>
-              <button className="gb sm" data-s="256">256</button>
-            </div>
-            <div className="cbar" style={{marginTop: '8px'}}>
-              <input id="pxw" type="number" min="4" max="256" style={{width: '72px'}} aria-label="Width" />
-              <span>x</span>
-              <input id="pxh" type="number" min="4" max="256" style={{width: '72px'}} aria-label="Height" />
-              <IconButton icon="check" id="pxap">SET</IconButton>
-            </div>
-            <div className="cbar" style={{marginTop: '10px'}}>
-              <label className="text-[length:calc(10px*var(--ts))]">
-                BRUSH{' '}
+          </Section>
+          <Section icon="pencil" title="BRUSH & SHAPES" id="pxbrush">
+            <div className="cbar">
+              <label className="pxnote">
+                BRUSH SIZE{' '}
                 <select id="pxbs" style={{width: '64px'}}>
                   <option>1</option>
                   <option>2</option>
@@ -80,9 +120,9 @@ function PixelCreatorModal() {
                 </select>
               </label>
               <IconButton icon="rectfill" id="pxfl">RECT FILL: OFF</IconButton>
-              <ToolButton icon="trash" label="CLEAR" tip="Clear the whole canvas (you can undo)" id="pxcl" />
             </div>
-            <div className="pxsec">REFERENCE IMAGE</div>
+          </Section>
+          <Section icon="image" title="REFERENCE & TRACE" id="pxref">
             <div className="cbar">
               <IconButton icon="image" className="on" id="pxrl">LOAD</IconButton>
               <IconButton icon="full" id="pxrfit">FIT</IconButton>
@@ -98,11 +138,11 @@ function PixelCreatorModal() {
             </label>
             <div className="cbar">
               <IconButton icon="wand" id="pxtr">TRACE TO PALETTE</IconButton>
+              <IconButton icon="drop" id="pxex">COLOURS FROM IMAGE</IconButton>
             </div>
-            <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-2">
-              Drag the image into place with MOVE REF. PICK also samples the reference where a cell is empty.
-            </p>
-            <div className="pxsec">SAVE</div>
+            <p className="pxnote">Drag the image into place with MOVE REF. PICK also samples the reference where a cell is empty.</p>
+          </Section>
+          <Section icon="save" title="SAVE" id="pxsave">
             <label className="fld">
               Name
               <input id="pxnm" defaultValue="pixel art" maxLength="24" />
@@ -127,16 +167,8 @@ function PixelCreatorModal() {
               <IconButton icon="check" id="pxup" style={{display: 'none'}}>UPDATE TILE</IconButton>
               <IconButton icon="download" id="pxpn">PNG</IconButton>
             </div>
-            <p className="text-[length:calc(10px*var(--ts))] opacity-[.86] mt-3" id="pxmsg">Pick a colour, then click the grid to draw. Your palette and draft are saved.</p>
-          </div>
-        </div>
-        <div className="pxdock">
-          <input type="color" id="pxcol" defaultValue="#383838" aria-label="Colour" />
-          <ToolButton icon="plus" label="ADD" tip="Add this colour to the palette" id="pxadd" />
-          <ToolButton icon="close" label="REMOVE" tip="Remove the selected colour from the palette" id="pxdel" />
-          <HScroll className="pxpalhs" trackClass="pxpal" id="pxpal"></HScroll>
-          <ToolButton icon="image" label="FROM REF" tip="Build a palette from the reference image" id="pxex" />
-          <span className="text-[length:calc(10px*var(--ts))] opacity-[.86]" id="pxpos"></span>
+            <p className="pxnote" id="pxmsg">Pick a colour, then click the grid to draw. Your palette and draft are saved.</p>
+          </Section>
         </div>
       </div>
     </div>

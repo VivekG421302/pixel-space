@@ -335,7 +335,7 @@ export function initApp() {
   addEventListener('keydown',e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;
    if(binding){e.preventDefault();if(k==='Escape'){binding=null;keysUI();return}if(['Shift','Control','Alt','Meta'].includes(k))return;
     const old=S.keys[binding];for(const a in S.keys)if(S.keys[a]===k&&a!==binding)S.keys[a]=old;S.keys[binding]=k;binding=null;save();keysUI();return}
-   if(k==='Escape'){if($('#mg').classList.contains('open')&&gfsOn()){gfsSet(false);return}const o=[...document.querySelectorAll('.modal.open')];if(o.length){const m=o[o.length-1];if(ROUTES['#'+m.id])open('#'+m.id,0);else m.classList.remove('open')}return}
+   if(k==='Escape'){if($('#pxgp')&&!$('#pxgp').hidden){$('#pxgp').hidden=true;$('#pxgs').setAttribute('aria-expanded','false');return}if($('#mg').classList.contains('open')&&gfsOn()){gfsSet(false);return}const o=[...document.querySelectorAll('.modal.open')];if(o.length){const m=o[o.length-1];if(ROUTES['#'+m.id])open('#'+m.id,0);else m.classList.remove('open')}return}
    if(!S.kb||e.ctrlKey||e.metaKey||e.altKey||e.repeat||typing(e.target)||document.querySelector('.modal.open,.amodal.open'))return;
    if(k===' '&&nativeActivate(e.target))return; // Space must still press a focused button
    const a=Object.keys(S.keys).find(a=>S.keys[a]===k);if(a&&ACTS[a]){e.preventDefault();ACTS[a]()}});
@@ -526,14 +526,15 @@ export function initApp() {
   /* ---- pixel creator: any canvas size, a docked palette, optional faint reference image ---- */
   const hexOf=a=>'#'+a.slice(0,3).map(v=>Math.round(v).toString(16).padStart(2,'0')).join(''),rgbOf=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
   const PX={w:32,h:32,z:12,zmax:32,cv:mk(32,32),tool:'pencil',col:'#383838',pal:LS('fq_pix_pal')||['#383838','#f8f8f8','#78c850','#48a030','#e84860','#f8d030','#48c8f8','#a0623c'],hist:[],redo:[],grid:true,bs:1,fill:false,trim:false,ref:null,refOp:.35,refShow:true,rc:null,pv:null,st:null,editId:null,init:false,layer:'draw',drawShow:true,pan:null,over:false};
-  const pxctx=()=>PX.cv.getContext('2d',{willReadFrequently:true}),pxmsg=m=>$('#pxmsg').textContent=m,pxsave=()=>SV('fq_pix_pal',PX.pal),inb=(x,y)=>x>=0&&y>=0&&x<PX.w&&y<PX.h;
+  const pxctx=()=>PX.cv.getContext('2d',{willReadFrequently:true}),pxmsg=m=>{$('#pxmsg').textContent=m;const t=$('#pxtoast');t.textContent=m;t.classList.add('on');clearTimeout(pxmsg.t);pxmsg.t=setTimeout(()=>t.classList.remove('on'),2600)},pxsave=()=>SV('fq_pix_pal',PX.pal),inb=(x,y)=>x>=0&&y>=0&&x<PX.w&&y<PX.h;
   let pxq=false,pxt;const pxd=()=>{if(!pxq){pxq=true;requestAnimationFrame(pxdraw)}};
   const pxdraft=()=>{if(PX.editId)return;clearTimeout(pxt);pxt=setTimeout(()=>SV('fq_pix_draft',{w:PX.w,h:PX.h,png:PX.cv.toDataURL()}),700)};
   function pxsnap(){PX.hist.push(pxctx().getImageData(0,0,PX.w,PX.h));if(PX.hist.length>40)PX.hist.shift();PX.redo=[]}
   function pxundo(redo){const a=redo?PX.redo:PX.hist,b=redo?PX.hist:PX.redo;if(!a.length)return;b.push(pxctx().getImageData(0,0,PX.w,PX.h));pxctx().putImageData(a.pop(),0,0);pxd();pxdraft()}
+  const pxfitZ=(w,h)=>{const v=$('#pxview'),vw=v.clientWidth||(innerWidth>900?innerWidth-420:innerWidth-60),vh=v.clientHeight||innerHeight-400;return Math.max(1,Math.floor(Math.min(vw,vh)*.9/Math.max(w,h)))};
   function pxsize(w,h,keep=true){w=Math.max(4,Math.min(256,Math.round(w)||32));h=Math.max(4,Math.min(256,Math.round(h)||32));const n=mk(w,h);if(keep)n.getContext('2d').drawImage(PX.cv,0,0);PX.cv=n;PX.w=w;PX.h=h;PX.hist=[];PX.redo=[];PX.rc=null;
-   PX.zmax=Math.max(1,Math.min(32,Math.floor(2048/Math.max(w,h))));const room=Math.min(innerWidth>900?innerWidth-420:innerWidth-60,innerHeight-400);PX.z=Math.max(1,Math.min(PX.zmax,Math.floor(room/Math.max(w,h))||1));
-   document.querySelectorAll('#pxs [data-s]').forEach(b=>b.classList.toggle('on',+b.dataset.s===w&&w===h));$('#pxw').value=w;$('#pxh').value=h;$('#pxmo').value=w%16===0&&h%16===0?'p':'o';$('#pxzl').textContent=PX.z+'x';pxd();pxdraft();pxcenter()}
+   PX.zmax=Math.max(1,Math.min(32,Math.floor(2048/Math.max(w,h))));PX.z=Math.max(1,Math.min(PX.zmax,pxfitZ(w,h)));
+   document.querySelectorAll('.pxgcfg [data-s]').forEach(b=>b.classList.toggle('on',+b.dataset.s===w&&w===h));document.querySelectorAll('.pxgcfg .pxw').forEach(i=>i.value=w);document.querySelectorAll('.pxgcfg .pxh').forEach(i=>i.value=h);$('#pxgst').textContent=w+' x '+h;$('#pxmo').value=w%16===0&&h%16===0?'p':'o';$('#pxzl').textContent=PX.z+'x';pxd();pxdraft();pxcenter()}
   function pxdraw(){pxq=false;if(!$('#mp').classList.contains('open'))return;const c=$('#pxc'),z=PX.z,W=PX.w*z,H=PX.h*z;if(c.width!==W||c.height!==H){c.width=W;c.height=H}
    const x=c.getContext('2d');x.clearRect(0,0,W,H);
    if(PX.ref&&PX.refShow){const r=PX.ref;x.save();x.globalAlpha=PX.refOp;x.imageSmoothingEnabled=true;x.drawImage(r.img,r.x*z,r.y*z,r.img.width*r.s*z,r.img.height*r.s*z);x.restore()}
@@ -583,8 +584,14 @@ export function initApp() {
     $('#pxro').oninput=e=>{PX.refOp=e.target.value/100;pxd()};
   $('#pxrs').oninput=e=>{const r=PX.ref;if(!r)return;const cx=r.x+r.img.width*r.s/2,cy=r.y+r.img.height*r.s/2;r.s=r.base*e.target.value/100;r.x=cx-r.img.width*r.s/2;r.y=cy-r.img.height*r.s/2;PX.rc=null;pxd()};
   document.querySelectorAll('[data-px]').forEach(b=>b.onclick=()=>{click();pxset(b.dataset.px)});
-  $('#pxs').onclick=e=>{const b=e.target.closest('[data-s]');if(b){click();pxsize(+b.dataset.s,+b.dataset.s)}};
-  $('#pxap').onclick=()=>{click();pxsize(+$('#pxw').value,+$('#pxh').value)};
+  /* grid size: the chip on the canvas opens this small editor; every .pxgcfg block (presets, width x height, SET) works the same */
+  const pxgp=$('#pxgp'),pxgs=$('#pxgs'),pxgpShut=()=>{pxgp.hidden=true;pxgs.setAttribute('aria-expanded','false')};
+  pxgs.onclick=()=>{click();const o=pxgp.hidden;pxgp.hidden=!o;pxgs.setAttribute('aria-expanded',o)};
+  document.addEventListener('pointerdown',e=>{if(!pxgp.hidden&&!e.target.closest('#pxgp,#pxgs'))pxgpShut()});
+  document.addEventListener('click',e=>{const b=e.target.closest('.pxgcfg [data-s]');if(b){click();pxsize(+b.dataset.s,+b.dataset.s);return}const a=e.target.closest('.pxgcfg .pxap');if(a){click();const c=a.closest('.pxgcfg');pxsize(+c.querySelector('.pxw').value,+c.querySelector('.pxh').value);if(c.id==='pxgp')pxgpShut()}});
+  $('#pxtt').oninput=e=>{$('#pxnm').value=e.target.value};$('#pxnm').addEventListener('input',e=>{$('#pxtt').value=e.target.value});
+  $('#pxzl').onclick=()=>{click();const v=$('#pxview').getBoundingClientRect();pxzoomAt(pxfitZ(PX.w,PX.h),v.left+v.width/2,v.top+v.height/2);pxcenter()};
+  $('#pxfin').onclick=()=>{click();const d=$('#pxsave');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'})};
   $('#pxbs').onchange=e=>PX.bs=+e.target.value;
   $('#pxfl').onclick=()=>{click();PX.fill=!PX.fill;const b=$('#pxfl');b.classList.toggle('on',PX.fill);b.querySelector('.btx').textContent='RECT FILL: '+(PX.fill?'ON':'OFF')};
   $('#pxtm').onclick=()=>{click();PX.trim=!PX.trim;const b=$('#pxtm');b.classList.toggle('on',PX.trim);b.querySelector('.btx').textContent='TRIM EDGES: '+(PX.trim?'ON':'OFF')};
@@ -599,7 +606,7 @@ export function initApp() {
   $('#pxpn').onclick=()=>{const o=pxout();if(!o){pxmsg('The canvas is empty.');return}o.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=($('#pxnm').value.trim()||'pixel-art')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)})};
   function pxopen(tile){const was=PX.editId;open('#mp',1);
    if(!PX.init){PX.init=true;const dr=LS('fq_pix_draft');if(dr&&dr.png){const im=new Image();im.onload=()=>{pxsize(dr.w,dr.h,false);pxctx().drawImage(im,0,0);pxd()};im.src=dr.png}else pxsize(32,32,false)}
-   if(tile){if(tile.w>256||tile.h>256)pxmsg('Tiles larger than 256 px cannot be edited here.');else{PX.editId=tile.id;pxsize(tile.w,tile.h,false);pxctx().drawImage(tile.img,0,0);$('#pxnm').value=tile.name;$('#pxcat').value=tile.cat;$('#pxmo').value=tile.mode;pxmsg('Editing an existing tile. Press UPDATE TILE to save your changes.')}}
+   if(tile){if(tile.w>256||tile.h>256)pxmsg('Tiles larger than 256 px cannot be edited here.');else{PX.editId=tile.id;pxsize(tile.w,tile.h,false);pxctx().drawImage(tile.img,0,0);$('#pxnm').value=$('#pxtt').value=tile.name;$('#pxcat').value=tile.cat;$('#pxmo').value=tile.mode;pxmsg('Editing an existing tile. Press UPDATE TILE to save your changes.')}}
    else if(was){PX.editId=null;pxsize(32,32,false);pxmsg('Started a fresh canvas.')}
    $('#pxup').style.display=PX.editId?'':'none';pxpal();pxtool();layerUI();pxd();pxcenter()}
   $('#bpx').onclick=$('#bpx2').onclick=$('#gpx').onclick=()=>{click();pxopen()};
@@ -622,7 +629,7 @@ export function initApp() {
   pxc.addEventListener('pointerenter',()=>{PX.over=true});pxc.addEventListener('pointerleave',()=>{PX.over=false});pxc.addEventListener('mousedown',e=>{if(e.button===1)e.preventDefault()});
   pxc.addEventListener('wheel',e=>{if(!(e.ctrlKey||e.metaKey))return;e.preventDefault();pxzoomAt(PX.z+(e.deltaY<0?1:-1)*Math.max(1,Math.round(PX.z*.2)),e.clientX,e.clientY)},{passive:false});
   addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey))return;const k=e.key,up=k==='+'||k==='='||k==='Add',dn=k==='-'||k==='_'||k==='Subtract',rs=k==='0';if(!up&&!dn&&!rs)return;
-   if(PX.over&&$('#mp').classList.contains('open')){e.preventDefault();if(rs){const v=$('#pxview').getBoundingClientRect();pxzoomAt(Math.max(1,Math.floor(Math.min(innerWidth>900?innerWidth-420:innerWidth-60,innerHeight-400)/Math.max(PX.w,PX.h))),v.left+v.width/2,v.top+v.height/2)}else pxzoomAt(PX.z+(up?1:-1)*Math.max(1,Math.round(PX.z*.2)),PX.mx,PX.my)}
+   if(PX.over&&$('#mp').classList.contains('open')){e.preventDefault();if(rs){const v=$('#pxview').getBoundingClientRect();pxzoomAt(pxfitZ(PX.w,PX.h),v.left+v.width/2,v.top+v.height/2)}else pxzoomAt(PX.z+(up?1:-1)*Math.max(1,Math.round(PX.z*.2)),PX.mx,PX.my)}
    else if(G.over&&$('#mg').classList.contains('open')){e.preventDefault();if(rs)gzoomAt(3-G.z,G.mx,G.my);else gzoomAt(up?1:-1,G.mx,G.my)}},true);
   addEventListener('resize',()=>pxd());
   new ResizeObserver(()=>{const v=$('#gview');gcv.width=v.clientWidth;gcv.height=v.clientHeight;gd()}).observe($('#gview'));
