@@ -553,18 +553,28 @@ export function initApp() {
    PX.col=hexOf([d[0],d[1],d[2]]);if(!PX.pal.includes(PX.col)){PX.pal.push(PX.col);pxsave()}pxpal()}
   function pxfitref(){const r=PX.ref;if(!r)return;const k=Math.min(PX.w/r.img.width,PX.h/r.img.height);r.base=k;r.s=k;r.x=(PX.w-r.img.width*k)/2;r.y=(PX.h-r.img.height*k)/2;PX.rc=null;$('#pxrs').value=100}
   const pxc=$('#pxc'),pxpt=e=>{const b=pxc.getBoundingClientRect();return[Math.floor((e.clientX-b.left)*PX.w/b.width),Math.floor((e.clientY-b.top)*PX.h/b.height)]};
-  pxc.addEventListener('pointerdown',e=>{if(e.button===1){e.preventDefault();pxc.setPointerCapture(e.pointerId);const v=$('#pxview');PX.pan={x:e.clientX,y:e.clientY,l:v.scrollLeft,t:v.scrollTop};return}if(e.button>0)return;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();pxc.setPointerCapture(e.pointerId);const p=pxpt(e),k=PX.tool;PX.st={p,last:p,k};
+  /* touch: one finger draws, two fingers pan (drag) and zoom (pinch) the canvas */
+  const pxtp=new Map();
+  const pxabort=()=>{const s=PX.st;PX.st=null;if(!s)return;if(s.k==='pencil'||s.k==='eraser'){pxundo(false);PX.redo.pop()}else if(s.k==='ref'&&s.r&&PX.ref){PX.ref.x=s.r.x;PX.ref.y=s.r.y;PX.rc=null}PX.pv=null;pxd()};
+  const pxgest=()=>{const a=[...pxtp.values()],cx=(a[0].x+a[1].x)/2,cy=(a[0].y+a[1].y)/2;PX.gest={cx,cy,d0:Math.max(10,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)),z0:PX.z}};
+  pxc.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){pxtp.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pxtp.size>=2){pxc.setPointerCapture(e.pointerId);pxabort();pxgest();return}}
+   if(e.button===1){e.preventDefault();pxc.setPointerCapture(e.pointerId);const v=$('#pxview');PX.pan={x:e.clientX,y:e.clientY,l:v.scrollLeft,t:v.scrollTop};return}if(e.button>0)return;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();pxc.setPointerCapture(e.pointerId);const p=pxpt(e),k=PX.tool;PX.st={p,last:p,k};
    if(k!=='ref'&&k!=='pick'&&!PX.drawShow){PX.st=null;pxmsg('Layer 2 (drawing) is hidden. Show it to draw.');return}
    if(k==='ref'){if(!PX.ref||!PX.refShow){PX.st=null;pxmsg(PX.ref?'Layer 1 (reference) is hidden. Show it to move it.':'Load a reference image first.');return}PX.st.r={x:PX.ref.x,y:PX.ref.y,sx:e.clientX,sy:e.clientY};return}
+   if((k==='pick'||k==='fill')&&e.pointerType==='touch'){PX.st.defer=true;return}  // on touch, wait for the finger to lift so a pinch does not fill
    if(k==='pick'){pxpick(p);PX.st=null;return}
    if(k==='fill'){pxfill(p[0],p[1]);PX.st=null;pxd();pxdraft();return}
    if(k==='pencil'||k==='eraser'){pxsnap();pxdot(pxctx(),p[0],p[1],k==='eraser');pxd()}else PX.pv=mk(PX.w,PX.h)});
-  pxc.addEventListener('pointermove',e=>{if(PX.pan){const v=$('#pxview');v.scrollLeft=PX.pan.l-(e.clientX-PX.pan.x);v.scrollTop=PX.pan.t-(e.clientY-PX.pan.y);return}PX.mx=e.clientX;PX.my=e.clientY;const p=pxpt(e);$('#pxpos').textContent=inb(p[0],p[1])?`${p[0]}, ${p[1]}`:'';const s=PX.st;if(!s)return;
+  pxc.addEventListener('pointermove',e=>{if(pxtp.has(e.pointerId))pxtp.set(e.pointerId,{x:e.clientX,y:e.clientY});
+   if(PX.gest){if(pxtp.size<2)return;const a=[...pxtp.values()],cx=(a[0].x+a[1].x)/2,cy=(a[0].y+a[1].y)/2,d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),g=PX.gest,v=$('#pxview');
+    v.scrollLeft-=cx-g.cx;v.scrollTop-=cy-g.cy;g.cx=cx;g.cy=cy;const nz=Math.max(1,Math.min(PX.zmax,Math.round(g.z0*d/g.d0)));if(nz!==PX.z)pxzoomAt(nz,cx,cy);return}
+   if(PX.pan){const v=$('#pxview');v.scrollLeft=PX.pan.l-(e.clientX-PX.pan.x);v.scrollTop=PX.pan.t-(e.clientY-PX.pan.y);return}PX.mx=e.clientX;PX.my=e.clientY;const p=pxpt(e);$('#pxpos').textContent=inb(p[0],p[1])?`${p[0]}, ${p[1]}`:'';const s=PX.st;if(!s)return;
    if(s.k==='ref'){if(s.r){PX.ref.x=s.r.x+(e.clientX-s.r.sx)/PX.z;PX.ref.y=s.r.y+(e.clientY-s.r.sy)/PX.z;PX.rc=null;pxd()}return}
    if(s.k==='pencil'||s.k==='eraser'){pxline(s.last,p,(x,y)=>pxdot(pxctx(),x,y,s.k==='eraser'));s.last=p;pxd()}
    else{PX.pv=mk(PX.w,PX.h);pxshape(PX.pv.getContext('2d'),s.k,s.p,p);pxd()}});
-  const pxend=e=>{if(PX.pan){PX.pan=null;return}const s=PX.st;if(!s)return;PX.st=null;if(s.k==='line'||s.k==='rect'){const p=pxpt(e);pxsnap();pxshape(pxctx(),s.k,s.p,p);PX.pv=null}if(s.k!=='ref')pxdraft();pxd()};
-  pxc.addEventListener('pointerup',pxend);pxc.addEventListener('pointercancel',()=>{PX.pan=null;PX.st=null;PX.pv=null;pxd()});
+  const pxlift=e=>{pxtp.delete(e.pointerId);if(pxtp.size<2)PX.gest=null};
+  const pxend=e=>{pxlift(e);if(PX.pan){PX.pan=null;return}const s=PX.st;if(!s)return;PX.st=null;if(s.defer){const p=pxpt(e);if(s.k==='pick')pxpick(p);else{pxfill(p[0],p[1]);pxd();pxdraft()}return}if(s.k==='line'||s.k==='rect'){const p=pxpt(e);pxsnap();pxshape(pxctx(),s.k,s.p,p);PX.pv=null}if(s.k!=='ref')pxdraft();pxd()};
+  pxc.addEventListener('pointerup',pxend);pxc.addEventListener('pointercancel',e=>{pxlift(e);PX.pan=null;PX.st=null;PX.pv=null;pxd()});
   $('#pxpal').onclick=e=>{const b=e.target.closest('[data-c]');if(b){click();PX.col=b.dataset.c;pxpal()}};
   $('#pxcol').oninput=e=>{PX.col=e.target.value;document.querySelectorAll('#pxpal .sw').forEach(s=>s.classList.toggle('on',s.dataset.c===PX.col))};
   $('#pxadd').onclick=()=>{click();if(!PX.pal.includes(PX.col)){PX.pal.push(PX.col);pxsave()}pxpal()};
