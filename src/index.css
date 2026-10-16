@@ -288,8 +288,9 @@ html[data-motion=reduced] *,html[data-motion=reduced] *::before,html[data-motion
 .hs.can-l .hs-l,.hs.can-r .hs-r{display:grid}
 
 /* ---------- pixel creator: tools | canvas | options on desktop, one scrolling page on phones ---------- */
-#mp .pxapp{display:grid;width:min(100%,1500px);height:100%;padding:0;overflow:hidden;grid-template-columns:auto minmax(0,1fr) 330px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"bar bar bar" "tools col opts" "tools stage opts"}
-.pxbar{grid-area:bar;display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:var(--bd) dashed var(--edge);background:var(--box);min-width:0}
+#mp .pxapp{display:grid;width:min(100%,1500px);height:100%;padding:0;overflow:hidden;grid-template-columns:auto minmax(0,1fr) 330px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"head head head" "tools col opts" "tools stage opts"}
+.pxhead{grid-area:head;background:var(--box);min-width:0}
+.pxbar{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:var(--bd) dashed var(--edge);background:var(--box);min-width:0}
 .pxbar .tbtn{flex:none;min-width:64px}
 .pxtitle{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;cursor:text}
 .pxtitle input{flex:0 1 320px;min-width:0;width:100%;text-align:center;background:transparent;border:0;border-bottom:var(--bd) dashed var(--edge);border-radius:0;font-size:calc(12px*var(--ts));padding:6px 4px}
@@ -325,7 +326,7 @@ html[data-motion=reduced] *,html[data-motion=reduced] *::before,html[data-motion
 @media(max-width:767px){
  #mp.gmodal{place-items:start center;padding:0}
  #mp .pxapp{display:flex;flex-direction:column;width:100%;height:auto;min-height:100%;overflow:visible;border-radius:0;border-width:0}
- .pxbar{position:sticky;top:0;z-index:20}
+ .pxhead{position:sticky;top:0;z-index:20}
  .pxstage{flex:none;height:clamp(280px,54dvh,600px)}
  .pxwrap{padding:min(22vh,160px) min(24vw,120px)}
  .pxtoolhs{border-right:0;border-bottom:var(--bd) dashed var(--edge);padding:8px}
@@ -333,3 +334,22 @@ html[data-motion=reduced] *,html[data-motion=reduced] *::before,html[data-motion
  .pxtools{grid-template-columns:none;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:64px;gap:6px;justify-content:start}
  .pxopts{overflow:visible;border-left:0;padding:10px 10px 28px}
 }
+
+/* steps */
+.pxsteps{display:flex;justify-content:center;gap:6px;padding:6px 10px 0}
+.pxstep{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:2px 12px;font-size:calc(9px*var(--ts))}
+.pxstep b{display:grid;place-items:center;width:20px;height:20px;border:var(--bd) solid currentColor;border-radius:50%;font-size:calc(9px*var(--ts))}
+.pxbt{flex:1;text-align:center;font-size:calc(11px*var(--ts));min-width:0}
+.pxhead .pxbar,.pxpage{display:none}
+.pxapp[data-step="1"] .pxhead .b1,.pxapp[data-step="2"] .pxhead .b2,.pxapp[data-step="3"] .pxhead .b3{display:flex}
+.pxapp:not([data-step="2"]) .pxcolrow,.pxapp:not([data-step="2"]) .pxstage,.pxapp:not([data-step="2"]) .pxtoolhs,.pxapp:not([data-step="2"]) .pxopts{display:none}
+.pxapp[data-step="1"] .p1,.pxapp[data-step="3"] .p3{display:block}
+.pxpage{grid-area:2 / 1 / 4 / 4;overflow:auto;min-height:0;padding:14px;background:var(--panel)}
+.pxcard{max-width:760px;margin:0 auto}
+.pxhd{display:flex;align-items:center;gap:8px;margin:14px 0 10px;font-size:calc(11px*var(--ts));color:var(--acc-text)}.pxcard>.pxhd:first-child,.pxprevcol>.pxhd,.pxmetacol>.pxhd{margin-top:0}
+.pxmetahost .fld input,.pxmetahost .fld select{width:100%;max-width:340px}
+.pxsave3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;max-width:900px}
+.pxprevbox{display:grid;place-items:center;min-height:200px;padding:12px;border:var(--bd) solid var(--line);border-radius:var(--r);background-color:#dfe9e2;background-image:conic-gradient(#c3d3c8 25%,transparent 0 50%,#c3d3c8 0 75%,transparent 0);background-size:16px 16px}
+#pxprev{display:block;max-width:100%;height:auto;image-rendering:pixelated}
+@media(max-width:767px){.pxsave3{grid-template-columns:1fr}.pxsteps{padding:6px 8px 0}.pxstep{padding:2px 8px}.pxpage{padding:12px 10px 28px;overflow:visible}.pxbt{font-size:calc(9px*var(--ts))}}
+.pxmetahost .fld{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.pxmetahost .fld input,.pxmetahost .fld select{margin-top:0}

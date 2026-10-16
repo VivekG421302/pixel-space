@@ -525,7 +525,7 @@ export function initApp() {
   $('#bsl').onclick=$('#bsl2').onclick=()=>{click();open('#msl',1);if(SL.raw)slDraw()};
   /* ---- pixel creator: any canvas size, a docked palette, optional faint reference image ---- */
   const hexOf=a=>'#'+a.slice(0,3).map(v=>Math.round(v).toString(16).padStart(2,'0')).join(''),rgbOf=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
-  const PX={w:32,h:32,z:12,zmax:32,cv:mk(32,32),tool:'pencil',col:'#383838',pal:LS('fq_pix_pal')||['#383838','#f8f8f8','#78c850','#48a030','#e84860','#f8d030','#48c8f8','#a0623c'],hist:[],redo:[],grid:true,bs:1,fill:false,trim:false,ref:null,refOp:.35,refShow:true,rc:null,pv:null,st:null,editId:null,init:false,layer:'draw',drawShow:true,pan:null,over:false};
+  const PX={w:32,h:32,z:12,zmax:32,cv:mk(32,32),tool:'pencil',col:'#383838',pal:LS('fq_pix_pal')||['#383838','#f8f8f8','#78c850','#48a030','#e84860','#f8d030','#48c8f8','#a0623c'],hist:[],redo:[],grid:true,bs:1,fill:false,trim:false,ref:null,refOp:.35,refShow:true,rc:null,pv:null,st:null,editId:null,init:false,layer:'draw',drawShow:true,pan:null,over:false,step:2,started:false,refit:false,cpend:false};
   const pxctx=()=>PX.cv.getContext('2d',{willReadFrequently:true}),pxmsg=m=>{$('#pxmsg').textContent=m;const t=$('#pxtoast');t.textContent=m;t.classList.add('on');clearTimeout(pxmsg.t);pxmsg.t=setTimeout(()=>t.classList.remove('on'),2600)},pxsave=()=>SV('fq_pix_pal',PX.pal),inb=(x,y)=>x>=0&&y>=0&&x<PX.w&&y<PX.h;
   let pxq=false,pxt;const pxd=()=>{if(!pxq){pxq=true;requestAnimationFrame(pxdraw)}};
   const pxdraft=()=>{if(PX.editId)return;clearTimeout(pxt);pxt=setTimeout(()=>SV('fq_pix_draft',{w:PX.w,h:PX.h,png:PX.cv.toDataURL()}),700)};
@@ -533,7 +533,7 @@ export function initApp() {
   function pxundo(redo){const a=redo?PX.redo:PX.hist,b=redo?PX.hist:PX.redo;if(!a.length)return;b.push(pxctx().getImageData(0,0,PX.w,PX.h));pxctx().putImageData(a.pop(),0,0);pxd();pxdraft()}
   const pxfitZ=(w,h)=>{const v=$('#pxview'),vw=v.clientWidth||(innerWidth>900?innerWidth-420:innerWidth-60),vh=v.clientHeight||innerHeight-400;return Math.max(1,Math.floor(Math.min(vw,vh)*.9/Math.max(w,h)))};
   function pxsize(w,h,keep=true){w=Math.max(4,Math.min(256,Math.round(w)||32));h=Math.max(4,Math.min(256,Math.round(h)||32));const n=mk(w,h);if(keep)n.getContext('2d').drawImage(PX.cv,0,0);PX.cv=n;PX.w=w;PX.h=h;PX.hist=[];PX.redo=[];PX.rc=null;
-   PX.zmax=Math.max(1,Math.min(32,Math.floor(2048/Math.max(w,h))));PX.z=Math.max(1,Math.min(PX.zmax,pxfitZ(w,h)));
+   PX.zmax=Math.max(1,Math.min(32,Math.floor(2048/Math.max(w,h))));PX.z=Math.max(1,Math.min(PX.zmax,pxfitZ(w,h)));PX.refit=PX.step!==2||!$('#pxview').clientWidth;
    document.querySelectorAll('.pxgcfg [data-s]').forEach(b=>b.classList.toggle('on',+b.dataset.s===w&&w===h));document.querySelectorAll('.pxgcfg .pxw').forEach(i=>i.value=w);document.querySelectorAll('.pxgcfg .pxh').forEach(i=>i.value=h);$('#pxgst').textContent=w+' x '+h;$('#pxmo').value=w%16===0&&h%16===0?'p':'o';$('#pxzl').textContent=PX.z+'x';pxd();pxdraft();pxcenter()}
   function pxdraw(){pxq=false;if(!$('#mp').classList.contains('open'))return;const c=$('#pxc'),z=PX.z,W=PX.w*z,H=PX.h*z;if(c.width!==W||c.height!==H){c.width=W;c.height=H}
    const x=c.getContext('2d');x.clearRect(0,0,W,H);
@@ -601,7 +601,22 @@ export function initApp() {
   document.addEventListener('click',e=>{const b=e.target.closest('.pxgcfg [data-s]');if(b){click();pxsize(+b.dataset.s,+b.dataset.s);return}const a=e.target.closest('.pxgcfg .pxap');if(a){click();const c=a.closest('.pxgcfg');pxsize(+c.querySelector('.pxw').value,+c.querySelector('.pxh').value);if(c.id==='pxgp')pxgpShut()}});
   $('#pxtt').oninput=e=>{$('#pxnm').value=e.target.value};$('#pxnm').addEventListener('input',e=>{$('#pxtt').value=e.target.value});
   $('#pxzl').onclick=()=>{click();const v=$('#pxview').getBoundingClientRect();pxzoomAt(pxfitZ(PX.w,PX.h),v.left+v.width/2,v.top+v.height/2);pxcenter()};
-  $('#pxfin').onclick=()=>{click();const d=$('#pxsave');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'})};
+  /* ---- steps: 1 setup (about + grid), 2 draw, 3 save. The META icon returns to step 1 whenever you like. ---- */
+  function pxprevDraw(){const o=pxout(),c=$('#pxprev'),n=$('#pxprevinfo');if(!o){c.width=c.height=1;c.style.width=c.style.height='0';n.textContent='Nothing drawn yet. Go back and draw something first.';$('#pxad').disabled=$('#pxpn').disabled=true;if($('#pxup'))$('#pxup').disabled=true;return}
+   const k=Math.max(1,Math.floor(Math.min(320/o.width,320/o.height)));c.width=o.width*k;c.height=o.height*k;c.style.width=c.width+'px';c.style.height=c.height+'px';const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,c.width,c.height);x.drawImage(o,0,0,c.width,c.height);
+   n.textContent=`${o.width} x ${o.height} px${PX.trim?' (edges trimmed)':''}`;$('#pxad').disabled=$('#pxpn').disabled=false;if($('#pxup'))$('#pxup').disabled=false}
+  function pxstep(n){const was=PX.step;PX.step=n;$('#mp .pxapp').dataset.step=n;
+   document.querySelectorAll('.pxstep').forEach(b=>{const on=+b.dataset.step===n;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});
+   if(n===1){$('#pxmeta1').appendChild($('#pxmeta'));$('#pxgo .btx').textContent=PX.started?'BACK TO DRAWING':'START DRAWING'}
+   if(n===3){$('#pxmeta3').appendChild($('#pxmeta'));pxprevDraw()}
+   if(n===2){PX.started=true;requestAnimationFrame(()=>{const c=PX.refit||PX.cpend;if(PX.refit)PX.z=Math.max(1,Math.min(PX.zmax,pxfitZ(PX.w,PX.h)));PX.refit=PX.cpend=false;$('#pxzl').textContent=PX.z+'x';pxq=true;pxdraw();if(c)pxcenter()})}
+   if(was!==n)$('#mp').scrollTop=0}
+  document.querySelectorAll('.pxstep').forEach(b=>b.onclick=()=>{click();pxstep(+b.dataset.step)});
+  $('#pxnext1').onclick=$('#pxgo').onclick=()=>{click();pxstep(2)};
+  $('#pxmetab').onclick=()=>{click();pxstep(1)};
+  $('#pxfin').onclick=()=>{click();pxstep(3)};
+  $('#pxback3').onclick=()=>{click();pxstep(2)};
+  $('#pxdone').onclick=()=>{click();open('#mp',0)};
   $('#pxbs').onchange=e=>PX.bs=+e.target.value;
   $('#pxfl').onclick=()=>{click();PX.fill=!PX.fill;const b=$('#pxfl');b.classList.toggle('on',PX.fill);b.querySelector('.btx').textContent='RECT FILL: '+(PX.fill?'ON':'OFF')};
   $('#pxtm').onclick=()=>{click();PX.trim=!PX.trim;const b=$('#pxtm');b.classList.toggle('on',PX.trim);b.querySelector('.btx').textContent='TRIM EDGES: '+(PX.trim?'ON':'OFF')};
@@ -618,10 +633,10 @@ export function initApp() {
    if(!PX.init){PX.init=true;const dr=LS('fq_pix_draft');if(dr&&dr.png){const im=new Image();im.onload=()=>{pxsize(dr.w,dr.h,false);pxctx().drawImage(im,0,0);pxd()};im.src=dr.png}else pxsize(32,32,false)}
    if(tile){if(tile.w>256||tile.h>256)pxmsg('Tiles larger than 256 px cannot be edited here.');else{PX.editId=tile.id;pxsize(tile.w,tile.h,false);pxctx().drawImage(tile.img,0,0);$('#pxnm').value=$('#pxtt').value=tile.name;$('#pxcat').value=tile.cat;$('#pxmo').value=tile.mode;pxmsg('Editing an existing tile. Press UPDATE TILE to save your changes.')}}
    else if(was){PX.editId=null;pxsize(32,32,false);pxmsg('Started a fresh canvas.')}
-   $('#pxup').style.display=PX.editId?'':'none';pxpal();pxtool();layerUI();pxd();pxcenter()}
+   $('#pxup').style.display=PX.editId?'':'none';pxpal();pxtool();layerUI();pxd();pxcenter();PX.started=!!tile;PX.cpend=true;pxstep(tile?2:1)}
   $('#bpx').onclick=$('#bpx2').onclick=$('#gpx').onclick=()=>{click();pxopen()};
   $('#tepx').onclick=()=>{const it=tcur();if(it){click();pxopen(it)}};
-  addEventListener('keydown',e=>{if(!$('#mp').classList.contains('open')||typing(e.target))return;const k=e.key.toLowerCase();
+  addEventListener('keydown',e=>{if(!$('#mp').classList.contains('open')||PX.step!==2||typing(e.target))return;const k=e.key.toLowerCase();
    if((e.ctrlKey||e.metaKey)&&(k==='z'||k==='y')){e.preventDefault();pxundo(k==='y'||e.shiftKey);return}if(e.ctrlKey||e.metaKey||e.altKey)return;
    const m={p:'pencil',e:'eraser',f:'fill',i:'pick',l:'line',r:'rect',m:'ref'}[k];if(m)pxset(m);else if(k==='g'){PX.grid=!PX.grid;pxd()}else if(k==='['||k===']'){PX.bs=Math.max(1,Math.min(4,PX.bs+(k===']'?1:-1)));$('#pxbs').value=PX.bs}});
   /* layers: 1 = reference image (under), 2 = drawing (on top); each can be hidden */

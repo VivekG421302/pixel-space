@@ -151,3 +151,10 @@ section at the end of `engine/app.js` wires them to the state.
 - `HScroll.jsx` wraps any horizontally scrolling row; arrows appear only when there is more to scroll to.
 - Cursors: `iconCursor()` in `src/data/pixelIcons.js` builds a CSS cursor from an icon. Garden cursors are set in `gcur()`, creator cursors in `pxtool()`.
 - The four atlas DUNGEON categories show as one DUNGEON category. Its sections come from `DSEC` / `DSEC_ORDER` in app.js (derived from the atlas groups; exact per-sheet sections need the original `Tiled_files` sheets).
+
+## Pixel creator (draw page)
+- Three steps on one page (`data-step` on `.pxapp`): 1 SETUP (about + grid size), 2 DRAW, 3 SAVE (preview + details + add / update / PNG). `pxstep(n)` in app.js switches; the META icon in step 2 goes back to step 1 and keeps the drawing. A new sprite opens at step 1, editing an existing tile opens at step 2.
+- The name / category / type form (`#pxmeta`) is one element that moves between steps 1 and 3. The title in the step 2 bar (`#pxtt`) is kept in sync with `#pxnm`.
+- Grid size editors are any `.pxgcfg` block (presets, `.pxw`, `.pxh`, `.pxap`); the chip on the canvas opens one as a popover.
+- Layout: desktop = tools | canvas (colours above) | options; phone = one vertical page (bar, colours, canvas, two-row tools that scroll sideways, collapsible options).
+- Touch on `#pxc`: one finger draws; two fingers pan and pinch-zoom (`pxtp`, `pxgest`); a second finger cancels the stroke it interrupted; fill and pick act when the finger lifts.
