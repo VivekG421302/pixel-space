@@ -368,3 +368,8 @@ html[data-motion=reduced] *,html[data-motion=reduced] *::before,html[data-motion
 
 /* boxes receive focus programmatically when a page opens; do not draw a ring around the whole page */
 .modal [role=dialog][tabindex="-1"]:focus{outline:none}
+
+.pxresult{margin-top:14px;padding:12px;border:var(--bd) solid var(--acc-text);border-radius:var(--r);background:var(--box)}
+.pxok{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:calc(11px*var(--ts));color:var(--acc-text)}
+.pxgerr{color:#b3261e;margin-top:6px}[data-scheme=dark] .pxgerr{color:#ff9b93}.pxgerr:empty{display:none}
+input[aria-invalid=true]{border-color:#b3261e;outline:2px solid #b3261e}

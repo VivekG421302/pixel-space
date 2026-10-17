@@ -599,7 +599,8 @@ export function initApp() {
   const pxgp=$('#pxgp'),pxgs=$('#pxgs'),pxgpShut=()=>{pxgp.hidden=true;pxgs.setAttribute('aria-expanded','false')};
   pxgs.onclick=()=>{click();const o=pxgp.hidden;pxgp.hidden=!o;pxgs.setAttribute('aria-expanded',o)};
   document.addEventListener('pointerdown',e=>{if(!pxgp.hidden&&!e.target.closest('#pxgp,#pxgs'))pxgpShut()});
-  document.addEventListener('click',e=>{const b=e.target.closest('.pxgcfg [data-s]');if(b){click();pxsize(+b.dataset.s,+b.dataset.s);return}const a=e.target.closest('.pxgcfg .pxap');if(a){click();const c=a.closest('.pxgcfg');pxsize(+c.querySelector('.pxw').value,+c.querySelector('.pxh').value);if(c.id==='pxgp')pxgpShut()}});
+  document.addEventListener('click',e=>{const b=e.target.closest('.pxgcfg [data-s]');if(b){click();document.querySelectorAll('.pxgcfg .pxgerr').forEach(x=>x.textContent='');document.querySelectorAll('.pxgcfg input').forEach(i=>i.removeAttribute('aria-invalid'));pxsize(+b.dataset.s,+b.dataset.s);return}const a=e.target.closest('.pxgcfg .pxap');if(a){click();const c=a.closest('.pxgcfg'),w=+c.querySelector('.pxw').value,h=+c.querySelector('.pxh').value,bad=!(Number.isInteger(w)&&Number.isInteger(h)&&w>=4&&w<=256&&h>=4&&h<=256);
+    c.querySelectorAll('.pxw,.pxh').forEach(i=>i.setAttribute('aria-invalid',bad));const er=c.querySelector('.pxgerr');if(er)er.textContent=bad?'Width and height must be whole numbers from 4 to 256.':'';if(bad)return;pxsize(w,h);if(c.id==='pxgp')pxgpShut()}});
   $('#pxtt').oninput=e=>{$('#pxnm').value=e.target.value};$('#pxnm').addEventListener('input',e=>{$('#pxtt').value=e.target.value});
   $('#pxzl').onclick=()=>{click();const v=$('#pxview').getBoundingClientRect();pxzoomAt(pxfitZ(PX.w,PX.h),v.left+v.width/2,v.top+v.height/2);pxcenter()};
   /* ---- steps: 1 setup (about + grid), 2 draw, 3 save. The META icon returns to step 1 whenever you like. ---- */
@@ -609,7 +610,7 @@ export function initApp() {
   function pxstep(n,quiet){const was=PX.step;PX.step=n;$('#mp .pxapp').dataset.step=n;
    document.querySelectorAll('.pxstep').forEach(b=>{const on=+b.dataset.step===n;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});
    if(n===1){$('#pxmeta1').appendChild($('#pxmeta'));$('#pxgo .btx').textContent=PX.started?'BACK TO DRAWING':'START DRAWING'}
-   if(n===3){$('#pxmeta3').appendChild($('#pxmeta'));pxprevDraw()}
+   if(n===3){$('#pxmeta3').appendChild($('#pxmeta'));pxprevDraw()}else $('#pxresult').hidden=true;
    if(n===2){PX.started=true;requestAnimationFrame(()=>{const c=PX.refit||PX.cpend;if(PX.refit)PX.z=Math.max(1,Math.min(PX.zmax,pxfitZ(PX.w,PX.h)));PX.refit=PX.cpend=false;$('#pxzl').textContent=PX.z+'x';pxq=true;pxdraw();if(c)pxcenter()})}
    if(was!==n)$('#mp').scrollTop=0;
    if(!quiet){const on=document.querySelector('.pxstep.on');if(on)on.focus({preventScroll:true});$('#pxsr').textContent=`Step ${n} of 3: ${['Setup','Draw','Save'][n-1]}`}}
@@ -628,10 +629,14 @@ export function initApp() {
   $('#pxgr').onclick=()=>{click();PX.grid=!PX.grid;pxd()};
   function pxout(){const o=mk(PX.w,PX.h);o.getContext('2d').drawImage(PX.cv,0,0);const d=o.getContext('2d').getImageData(0,0,PX.w,PX.h).data;let any=false;for(let i=3;i<d.length;i+=4)if(d[i]>0){any=true;break}if(!any)return null;return PX.trim?trimc(o):o}
   $('#pxad').onclick=async()=>{const o=pxout();if(!o){pxmsg('The canvas is empty. Draw something first.');return}click();const nm=$('#pxnm').value.trim()||'pixel art',cat=upCat($('#pxcat').value),it=await ctNew(o,nm.slice(0,24),cat,$('#pxmo').value);
-   G.cat=it.cat;G.sel=it.id;TM.sel=it.id;tmUI();gpal();gd();pxmsg(`Added "${it.name}" to ${cat}. It is selected in the garden dock.`)};
-  $('#pxup').onclick=async()=>{const it=CTM.get(PX.editId),o=pxout();if(!it||!o){pxmsg('Nothing to update.');return}click();it.name=$('#pxnm').value.trim().slice(0,24)||it.name;it.cat=upCat($('#pxcat').value);it.mode=$('#pxmo').value;await ctApply(it,o);pxmsg(`Updated "${it.name}".`)};
+   G.cat=it.cat;G.sel=it.id;TM.sel=it.id;tmUI();gpal();gd();pxmsg(`Added "${it.name}" to ${cat}. It is selected in the garden dock.`);pxsaved()};
+  $('#pxup').onclick=async()=>{const it=CTM.get(PX.editId),o=pxout();if(!it||!o){pxmsg('Nothing to update.');return}click();it.name=$('#pxnm').value.trim().slice(0,24)||it.name;it.cat=upCat($('#pxcat').value);it.mode=$('#pxmo').value;await ctApply(it,o);pxmsg(`Updated "${it.name}".`);pxsaved()};
   $('#pxpn').onclick=()=>{const o=pxout();if(!o){pxmsg('The canvas is empty.');return}o.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=($('#pxnm').value.trim()||'pixel-art')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)})};
-  function pxopen(tile){const was=PX.editId;open('#mp',1);
+  /* after saving: say so, and offer the two things people do next */
+  function pxsaved(){const r=$('#pxresult');r.hidden=false;$('#pxsee').focus({preventScroll:true})}
+  $('#pxsee').onclick=()=>{click();if(PX.from==='#mg')open('#mp',0);else{open('#mp',0);$('#bg').click()}};
+  $('#pxanother').onclick=()=>{click();PX.editId=null;pxsize(PX.w,PX.h,false);$('#pxnm').value=$('#pxtt').value='pixel art';$('#pxup').style.display='none';PX.started=false;layerUI();pxstep(1);pxmsg('Started a fresh canvas.')};
+  function pxopen(tile){const was=PX.editId;PX.from=pageCur;open('#mp',1);$('#pxresult').hidden=true;
    if(!PX.init){PX.init=true;const dr=LS('fq_pix_draft');if(dr&&dr.png){const im=new Image();im.onload=()=>{pxsize(dr.w,dr.h,false);pxctx().drawImage(im,0,0);pxd()};im.src=dr.png}else pxsize(32,32,false)}
    if(tile){if(tile.w>256||tile.h>256)pxmsg('Tiles larger than 256 px cannot be edited here.');else{PX.editId=tile.id;pxsize(tile.w,tile.h,false);pxctx().drawImage(tile.img,0,0);$('#pxnm').value=$('#pxtt').value=tile.name;$('#pxcat').value=tile.cat;$('#pxmo').value=tile.mode;pxmsg('Editing an existing tile. Press UPDATE TILE to save your changes.')}}
    else if(was){PX.editId=null;pxsize(32,32,false);pxmsg('Started a fresh canvas.')}

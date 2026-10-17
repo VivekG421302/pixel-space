@@ -83,6 +83,7 @@ function PixelCreatorModal() {
               <input className="pxh" id="pxh" type="number" min="4" max="256" style={{width: '72px'}} aria-label="Height" />
               <IconButton icon="check" className="pxap" id="pxap">SET</IconButton>
             </div>
+            <p className="pxgerr pxnote" role="alert"></p>
           </div>
           <button type="button" className="gb sq pxchip pxgrid" id="pxgr" aria-pressed="true" aria-label="Grid lines" data-tip="Grid lines · G"><PixelIcon name="grid" size={22} /></button>
           <div className="pxzoom" role="group" aria-label="Zoom">
@@ -204,6 +205,7 @@ function PixelCreatorModal() {
                 <input className="pxh" type="number" min="4" max="256" style={{width: '72px'}} aria-label="Height" />
                 <IconButton icon="check" className="pxap">SET</IconButton>
               </div>
+              <p className="pxgerr pxnote" role="alert"></p>
             </div>
             <p className="pxnote">Pixels are counted in cells. You can change the name, type and grid size again at any time with the META icon while you draw. Changing the grid keeps your drawing.</p>
             <div className="cbar" style={{marginTop: '14px'}}>
@@ -227,6 +229,13 @@ function PixelCreatorModal() {
                 <IconButton icon="download" id="pxpn">PNG</IconButton>
               </div>
               <p className="pxnote" id="pxmsg">Check your sprite, adjust the details, then add it to your tiles.</p>
+              <div className="pxresult" id="pxresult" hidden>
+                <b className="pxok"><PixelIcon name="check" size={18} /> SAVED</b>
+                <div className="cbar">
+                  <IconButton icon="paint" className="on" id="pxsee">SEE IT IN THE GARDEN</IconButton>
+                  <IconButton icon="plus" id="pxanother">DRAW ANOTHER</IconButton>
+                </div>
+              </div>
             </div>
           </div>
         </section>
