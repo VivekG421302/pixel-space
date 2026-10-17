@@ -373,3 +373,11 @@ html[data-motion=reduced] *,html[data-motion=reduced] *::before,html[data-motion
 .pxok{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:calc(11px*var(--ts));color:var(--acc-text)}
 .pxgerr{color:#b3261e;margin-top:6px}[data-scheme=dark] .pxgerr{color:#ff9b93}.pxgerr:empty{display:none}
 input[aria-invalid=true]{border-color:#b3261e;outline:2px solid #b3261e}
+
+/* Windows high contrast / forced colours: selected state cannot depend on background colour alone */
+@media (forced-colors:active){
+ .gb.on,.gb[aria-pressed=true],.pxstep[aria-current=step],.sw.on,.gt.on{outline:3px solid Highlight;outline-offset:2px;forced-color-adjust:none;background:Canvas;color:CanvasText}
+ .gb:disabled{color:GrayText;border-color:GrayText}
+ .pxtoast,#tip{border:2px solid CanvasText}
+ .pxview,.pxstage,#gview{border:1px solid CanvasText}
+}
