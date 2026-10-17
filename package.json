@@ -9,7 +9,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "mock:api": "node scripts/mock-api.mjs",
-    "export:builtin": "node scripts/export-builtin-sprites.mjs"
+    "export:builtin": "node scripts/export-builtin-sprites.mjs",
+    "test": "npm run build && node --test tests/e2e/app.test.mjs",
+    "test:e2e": "node --test tests/e2e/app.test.mjs"
   },
   "engines": {
     "node": ">=18"
@@ -21,6 +23,8 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "axe-core": "^4.14.0",
+    "playwright": "^1.56.0",
     "pngjs": "^7.0.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
