@@ -25,6 +25,7 @@ function PixelCreatorModal() {
   return (
     <div className="modal gmodal" id="mp">
       <div className="box pxapp" data-step="2" role="dialog" aria-modal="true" aria-label="Pixel art creator">
+        <div className="sr-only" id="pxsr" role="status" aria-live="polite"></div>
         <div className="pxhead">
           <nav className="pxsteps" aria-label="Steps">
             <button type="button" className="gb sm pxstep" data-step="1"><b>1</b><span>SETUP</span></button>

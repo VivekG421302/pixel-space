@@ -365,3 +365,6 @@ html[data-motion=reduced] *,html[data-motion=reduced] *::before,html[data-motion
  #cvc,#cvr{min-width:44px}
  .pxzoom .gb,.pxgrid,.gfsb,.gpvz .sq{width:44px;height:44px;min-height:44px}
 }
+
+/* boxes receive focus programmatically when a page opens; do not draw a ring around the whole page */
+.modal [role=dialog][tabindex="-1"]:focus{outline:none}

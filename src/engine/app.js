@@ -284,7 +284,8 @@ export function initApp() {
   const ROUTES={'#mnu':'menu','#ms':'settings','#ma':'about','#mb':'banners','#mg':'garden','#mt':'tiles','#msl':'import','#mp':'draw'};
   const BYROUTE=Object.fromEntries(Object.entries(ROUTES).map(([k,v])=>[v,k]));
   const BASE_TITLE=document.title;let pageCur=null,pagePend=null;
-  const pageApply=id=>{pageCur=id;for(const k in ROUTES)$(k).classList.toggle('open',k===id);const sb=id&&$(id+' .sb');if(sb)sb.scrollTop=0;document.title=id?ROUTES[id][0].toUpperCase()+ROUTES[id].slice(1)+' · '+BASE_TITLE:BASE_TITLE;scrollTo(0,0)};
+  const pageApply=id=>{pageCur=id;for(const k in ROUTES)$(k).classList.toggle('open',k===id);const sb=id&&$(id+' .sb');if(sb)sb.scrollTop=0;document.title=id?ROUTES[id][0].toUpperCase()+ROUTES[id].slice(1)+' · '+BASE_TITLE:BASE_TITLE;scrollTo(0,0);
+   if(id){const box=$(id).querySelector('[role=dialog]')||$(id);box.tabIndex=-1;requestAnimationFrame(()=>box.focus({preventScroll:true}))}};
   const open=(id,v)=>{binding=null;
    if(!ROUTES[id]){$(id).classList.toggle('open',v);return}
    if(v){if(pageCur===id&&!pagePend)return;const url='#/'+ROUTES[id],d=(history.state&&history.state.d)||0;
@@ -605,12 +606,13 @@ export function initApp() {
   function pxprevDraw(){const o=pxout(),c=$('#pxprev'),n=$('#pxprevinfo');if(!o){c.width=c.height=1;c.style.width=c.style.height='0';n.textContent='Nothing drawn yet. Go back and draw something first.';$('#pxad').disabled=$('#pxpn').disabled=true;if($('#pxup'))$('#pxup').disabled=true;return}
    const k=Math.max(1,Math.floor(Math.min(320/o.width,320/o.height)));c.width=o.width*k;c.height=o.height*k;c.style.width=c.width+'px';c.style.height=c.height+'px';const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,c.width,c.height);x.drawImage(o,0,0,c.width,c.height);
    n.textContent=`${o.width} x ${o.height} px${PX.trim?' (edges trimmed)':''}`;$('#pxad').disabled=$('#pxpn').disabled=false;if($('#pxup'))$('#pxup').disabled=false}
-  function pxstep(n){const was=PX.step;PX.step=n;$('#mp .pxapp').dataset.step=n;
+  function pxstep(n,quiet){const was=PX.step;PX.step=n;$('#mp .pxapp').dataset.step=n;
    document.querySelectorAll('.pxstep').forEach(b=>{const on=+b.dataset.step===n;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});
    if(n===1){$('#pxmeta1').appendChild($('#pxmeta'));$('#pxgo .btx').textContent=PX.started?'BACK TO DRAWING':'START DRAWING'}
    if(n===3){$('#pxmeta3').appendChild($('#pxmeta'));pxprevDraw()}
    if(n===2){PX.started=true;requestAnimationFrame(()=>{const c=PX.refit||PX.cpend;if(PX.refit)PX.z=Math.max(1,Math.min(PX.zmax,pxfitZ(PX.w,PX.h)));PX.refit=PX.cpend=false;$('#pxzl').textContent=PX.z+'x';pxq=true;pxdraw();if(c)pxcenter()})}
-   if(was!==n)$('#mp').scrollTop=0}
+   if(was!==n)$('#mp').scrollTop=0;
+   if(!quiet){const on=document.querySelector('.pxstep.on');if(on)on.focus({preventScroll:true});$('#pxsr').textContent=`Step ${n} of 3: ${['Setup','Draw','Save'][n-1]}`}}
   document.querySelectorAll('.pxstep').forEach(b=>b.onclick=()=>{click();pxstep(+b.dataset.step)});
   $('#pxnext1').onclick=$('#pxgo').onclick=()=>{click();pxstep(2)};
   $('#pxmetab').onclick=()=>{click();pxstep(1)};
@@ -633,7 +635,7 @@ export function initApp() {
    if(!PX.init){PX.init=true;const dr=LS('fq_pix_draft');if(dr&&dr.png){const im=new Image();im.onload=()=>{pxsize(dr.w,dr.h,false);pxctx().drawImage(im,0,0);pxd()};im.src=dr.png}else pxsize(32,32,false)}
    if(tile){if(tile.w>256||tile.h>256)pxmsg('Tiles larger than 256 px cannot be edited here.');else{PX.editId=tile.id;pxsize(tile.w,tile.h,false);pxctx().drawImage(tile.img,0,0);$('#pxnm').value=$('#pxtt').value=tile.name;$('#pxcat').value=tile.cat;$('#pxmo').value=tile.mode;pxmsg('Editing an existing tile. Press UPDATE TILE to save your changes.')}}
    else if(was){PX.editId=null;pxsize(32,32,false);pxmsg('Started a fresh canvas.')}
-   $('#pxup').style.display=PX.editId?'':'none';pxpal();pxtool();layerUI();pxd();pxcenter();PX.started=!!tile;PX.cpend=true;pxstep(tile?2:1)}
+   $('#pxup').style.display=PX.editId?'':'none';pxpal();pxtool();layerUI();pxd();pxcenter();PX.started=!!tile;PX.cpend=true;pxstep(tile?2:1,true)}
   $('#bpx').onclick=$('#bpx2').onclick=$('#gpx').onclick=()=>{click();pxopen()};
   $('#tepx').onclick=()=>{const it=tcur();if(it){click();pxopen(it)}};
   addEventListener('keydown',e=>{if(!$('#mp').classList.contains('open')||PX.step!==2||typing(e.target))return;const k=e.key.toLowerCase();
