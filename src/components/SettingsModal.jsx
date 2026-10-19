@@ -25,6 +25,11 @@ function SettingsModal() {
             <span>Volume</span>
             <input type="range" id="vol" aria-label="Volume" min="0" max="100" style={{width: '55%'}} />
           </div>
+          <h3>TOUCH</h3>
+          <div className="row">
+            <span>Vibration on tap</span>
+            <button className="gb !py-1" id="hapt" aria-pressed="true">ON</button>
+          </div>
           <h3>SHORTCUTS</h3>
           <div className="row">
             <span>Enabled</span>

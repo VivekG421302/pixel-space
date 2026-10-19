@@ -30,6 +30,9 @@ export function initApp() {
   /* ---- 8-bit audio ---- */
   let AC;const ctx=()=>AC||(AC=new (window.AudioContext||window.webkitAudioContext)());
   function tone(f,t,d,type='square',g=.12){if(!S.snd)return;const c=ctx(),o=c.createOscillator(),v=c.createGain(),s=c.currentTime+t;o.type=type;o.frequency.value=f;v.gain.setValueAtTime(g*S.vol/100,s);v.gain.setValueAtTime(g*S.vol/100,s+d*.7);v.gain.linearRampToValueAtTime(.0001,s+d);o.connect(v).connect(c.destination);o.start(s);o.stop(s+d+.02)}
+  /* haptics: a very short vibration on touch devices that support it (Android browsers; iOS Safari has no web vibration). Settings > Touch turns it off. */
+  const haptic=(p=8)=>{if(S.haptic===false||!navigator.vibrate||!matchMedia('(pointer:coarse)').matches)return;try{navigator.vibrate(p)}catch(e){}};
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button,summary,[role=button],select,.sw,.gt,.lyrsel');if(!b||b.disabled)return;haptic(b.matches('[aria-pressed],[data-px],[data-tool],.pxstep,.sw,.gt')?12:8)});
   const click=()=>tone(1046,0,.05),check=()=>{tone(784,0,.1);tone(1175,.1,.2)},meow=()=>{tone(880,0,.08);tone(660,.08,.14)};
   const done=()=>[523,659,784,1047,0,784,1047,1319].forEach((f,i)=>f&&tone(f,i*.14,.18));
 
@@ -278,7 +281,7 @@ export function initApp() {
   function tile(k,p){const f=p.idle[0],c=f%p.cols,r=Math.floor(f/p.cols),s=p.tz||Math.min(1.2,56/p.cw,62/p.ch);
    return `<button class="tile ${S.pet===k?'on':''}" data-pet="${k}"><i style="width:${p.cw*s}px;height:${p.ch*s}px;background-image:url(${p.src});background-size:${p.cols*p.cw*s}px ${p.rows*p.ch*s}px;background-position:-${c*p.cw*s}px -${r*p.ch*s}px"></i>${p.n||'MINE'}</button>`}
   function settings(){thUI();a11yUI();tkUI();pwaUI();$('#durs').innerHTML='<span></span><span class="h">FOCUS</span><span class="h">REST</span>'+Object.entries(MODES).map(([k,m])=>`<span>${m.n}</span><input type="number" min="1" max="240" data-k="${k}" data-p="f" aria-label="${m.n} focus minutes" value="${dur(k).f}"><input type="number" min="1" max="120" data-k="${k}" data-p="b" aria-label="${m.n} rest minutes" value="${dur(k).b}">`).join('');
-   $('#snd').textContent=S.snd?'ON':'OFF';$('#snd').classList.toggle('on',S.snd);$('#snd').setAttribute('aria-pressed',S.snd);$('#vol').value=S.vol;
+   $('#hapt').textContent=S.haptic?'ON':'OFF';$('#hapt').classList.toggle('on',S.haptic);$('#hapt').setAttribute('aria-pressed',S.haptic);$('#snd').textContent=S.snd?'ON':'OFF';$('#snd').classList.toggle('on',S.snd);$('#snd').setAttribute('aria-pressed',S.snd);$('#vol').value=S.vol;
    const pe=Object.entries(PETS);$('#pets').innerHTML=pe.filter(([k])=>!k.startsWith('sg')).map(([k,p])=>tile(k,p)).join('')+(S.custom?tile('custom',S.custom):'');$('#pets2').innerHTML=pe.filter(([k])=>k.startsWith('sg')).map(([k,p])=>tile(k,p)).join('');keysUI()}
   document.querySelectorAll('#pets,#pets2').forEach(g=>g.onclick=e=>{const b=e.target.closest('[data-pet]');if(!b)return;S.pet=b.dataset.pet;save();click();size();settings()});
   /* ---- pages: every screen except the little confirm box is its own page with its own address (#/garden, #/draw ...).
@@ -305,7 +308,7 @@ export function initApp() {
   $('#ba').onclick=()=>{click();$('#ab').innerHTML=Object.values(MODES).map(m=>`<div class="row"><span>${m.n}</span><span>${dur(Object.keys(MODES).find(k=>MODES[k]===m)).f} / ${dur(Object.keys(MODES).find(k=>MODES[k]===m)).b} min</span></div>`).join('');open('#ma',1)};
   document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{click();open('#'+b.closest('.modal').id,0)});
   $('#sc').onclick=()=>{click();document.querySelectorAll('#durs input').forEach(i=>{const k=i.dataset.k;S.dur[k]=S.dur[k]||{};S.dur[k][i.dataset.p]=Math.max(1,+i.value||1)});save();open('#ms',0);if(!run)reset(false)};
-  $('#snd').onclick=()=>{S.snd=!S.snd;save();settings();click()};$('#vol').oninput=e=>{S.vol=+e.target.value;save()};$('#vol').onchange=click;
+  $('#snd').onclick=()=>{S.snd=!S.snd;save();settings();click()};$('#hapt').onclick=()=>{S.haptic=!S.haptic;save();settings();haptic([10,30,10])};$('#vol').oninput=e=>{S.vol=+e.target.value;save()};$('#vol').onchange=click;
   $('#cs').onclick=()=>{const f=$('#cf').files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const cols=+$('#cc').value||1,rows=+$('#cr').value||1,l=s=>s.split(',').map(n=>+n.trim()).filter(n=>!isNaN(n)&&n>=0),idle=l($('#cid').value),w=l($('#cwk').value);
     S.custom={n:'MINE',src:r.result,cols,rows,cw:im.width/cols,ch:im.height/rows,face:+$('#cfc').value,walk:w.length?w:idle,idle:idle.length?idle:[0],sleep:l($('#csl').value),jump:l($('#cj').value),happy:idle,groom:idle,wave:idle,stretch:idle};
     if(S.custom.jump.length<3)S.custom.jump=[idle[0]||0,idle[0]||0,idle[0]||0];S.pet='custom';save();size();settings();click()};im.src=r.result};r.readAsDataURL(f)};
@@ -441,7 +444,7 @@ export function initApp() {
   $('#gzm').onclick=()=>{click();gzoom(-1)};$('#gzp').onclick=()=>{click();gzoom(1)};
   $('#ggr').onclick=()=>{click();G.grid=!G.grid;$('#ggr').classList.toggle('on',G.grid);$('#ggr').setAttribute('aria-pressed',G.grid);gd()};$('#gund').onclick=()=>{click();gstep(false)};$('#gred').onclick=()=>{click();gstep(true)};
   addEventListener('keydown',e=>{if(!$('#mg').classList.contains('open')||typing(e.target)||!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase();if(k==='z'||k==='y'){e.preventDefault();gstep(k==='y'||e.shiftKey)}});$('#gpvm').onclick=()=>{click();gzoom(-1)};$('#gpvp').onclick=()=>{click();gzoom(1)};$('#gce').onclick=()=>{click();G.cx=GW*TS/2;G.cy=GH*TS/2;gd()};
-  $('#gcl').onclick=async()=>{if(await ask('Remove everything you have placed in the garden?','CLEAR GARDEN','CLEAR GARDEN?')){G.cur=new Map();for(const k of G.cells.keys())gtouch(k);G.cells.clear();gcommit();gsave();click();gd()}};
+  $('#gcl').onclick=async()=>{if(await ask('Remove everything you have placed in the garden?','CLEAR GARDEN','CLEAR GARDEN?')){G.cur=new Map();for(const k of G.cells.keys())gtouch(k);G.cells.clear();gcommit();gsave();click();haptic([20,30,20]);gd()}};
   const toolUI=()=>document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===G.tool));
   document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{click();G.tool=b.dataset.tool;toolUI();gd()});
   const thumb=(it,m)=>{const s=Math.min(3,m/Math.max(it.w,it.h)),b=`width:${it.w*s}px;height:${it.h*s}px;`;return it.img?b+`background-image:url(${it.url});background-size:100% 100%`:b+`background-size:${AW*s}px ${AH*s}px;background-position:-${it.x*s}px -${it.y*s}px`};
@@ -602,7 +605,7 @@ export function initApp() {
   pxgs.onclick=()=>{click();const o=pxgp.hidden;pxgp.hidden=!o;pxgs.setAttribute('aria-expanded',o)};
   document.addEventListener('pointerdown',e=>{if(!pxgp.hidden&&!e.target.closest('#pxgp,#pxgs'))pxgpShut()});
   document.addEventListener('click',e=>{const b=e.target.closest('.pxgcfg [data-s]');if(b){click();document.querySelectorAll('.pxgcfg .pxgerr').forEach(x=>x.textContent='');document.querySelectorAll('.pxgcfg input').forEach(i=>i.removeAttribute('aria-invalid'));pxsize(+b.dataset.s,+b.dataset.s);return}const a=e.target.closest('.pxgcfg .pxap');if(a){click();const c=a.closest('.pxgcfg'),w=+c.querySelector('.pxw').value,h=+c.querySelector('.pxh').value,bad=!(Number.isInteger(w)&&Number.isInteger(h)&&w>=4&&w<=256&&h>=4&&h<=256);
-    c.querySelectorAll('.pxw,.pxh').forEach(i=>i.setAttribute('aria-invalid',bad));const er=c.querySelector('.pxgerr');if(er)er.textContent=bad?'Width and height must be whole numbers from 4 to 256.':'';if(bad)return;pxsize(w,h);if(c.id==='pxgp')pxgpShut()}});
+    c.querySelectorAll('.pxw,.pxh').forEach(i=>i.setAttribute('aria-invalid',bad));const er=c.querySelector('.pxgerr');if(er)er.textContent=bad?'Width and height must be whole numbers from 4 to 256.':'';if(bad){haptic([30,50,30]);return}pxsize(w,h);if(c.id==='pxgp')pxgpShut()}});
   $('#pxtt').oninput=e=>{$('#pxnm').value=e.target.value};$('#pxnm').addEventListener('input',e=>{$('#pxtt').value=e.target.value});
   $('#pxzl').onclick=()=>{click();const v=$('#pxview').getBoundingClientRect();pxzoomAt(pxfitZ(PX.w,PX.h),v.left+v.width/2,v.top+v.height/2);pxcenter()};
   /* ---- steps: 1 setup (about + grid), 2 draw, 3 save. The META icon returns to step 1 whenever you like. ---- */
@@ -625,7 +628,7 @@ export function initApp() {
   $('#pxbs').onchange=e=>PX.bs=+e.target.value;
   $('#pxfl').onclick=()=>{click();PX.fill=!PX.fill;const b=$('#pxfl');b.classList.toggle('on',PX.fill);b.querySelector('.btx').textContent='RECT FILL: '+(PX.fill?'ON':'OFF')};
   $('#pxtm').onclick=()=>{click();PX.trim=!PX.trim;const b=$('#pxtm');b.classList.toggle('on',PX.trim);b.querySelector('.btx').textContent='TRIM EDGES: '+(PX.trim?'ON':'OFF')};
-  $('#pxcl').onclick=async()=>{if(await ask('Clear the whole canvas? You can undo this.','CLEAR CANVAS','CLEAR CANVAS?')){pxsnap();pxctx().clearRect(0,0,PX.w,PX.h);pxd();pxdraft()}};
+  $('#pxcl').onclick=async()=>{if(await ask('Clear the whole canvas? You can undo this.','CLEAR CANVAS','CLEAR CANVAS?')){pxsnap();pxctx().clearRect(0,0,PX.w,PX.h);haptic([20,30,20]);pxd();pxdraft()}};
   $('#pxu').onclick=()=>{click();pxundo(false)};$('#pxr').onclick=()=>{click();pxundo(true)};
   const pxz=d=>{const v=$('#pxview').getBoundingClientRect();pxzoomAt(PX.z+d,v.left+v.width/2,v.top+v.height/2)};$('#pxzm').onclick=()=>{click();pxz(-1)};$('#pxzp').onclick=()=>{click();pxz(1)};
   $('#pxgr').onclick=()=>{click();PX.grid=!PX.grid;pxd()};
@@ -635,7 +638,7 @@ export function initApp() {
   $('#pxup').onclick=async()=>{const it=CTM.get(PX.editId),o=pxout();if(!it||!o){pxmsg('Nothing to update.');return}click();it.name=$('#pxnm').value.trim().slice(0,24)||it.name;it.cat=upCat($('#pxcat').value);it.mode=$('#pxmo').value;await ctApply(it,o);pxmsg(`Updated "${it.name}".`);pxsaved()};
   $('#pxpn').onclick=()=>{const o=pxout();if(!o){pxmsg('The canvas is empty.');return}o.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=($('#pxnm').value.trim()||'pixel-art')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)})};
   /* after saving: say so, and offer the two things people do next */
-  function pxsaved(){const r=$('#pxresult');r.hidden=false;$('#pxsee').focus({preventScroll:true})}
+  function pxsaved(){haptic([10,40,10]);const r=$('#pxresult');r.hidden=false;$('#pxsee').focus({preventScroll:true})}
   $('#pxsee').onclick=()=>{click();if(PX.from==='#mg')open('#mp',0);else{open('#mp',0);$('#bg').click()}};
   $('#pxanother').onclick=()=>{click();PX.editId=null;pxsize(PX.w,PX.h,false);$('#pxnm').value=$('#pxtt').value='pixel art';$('#pxup').style.display='none';PX.started=false;layerUI();pxstep(1);pxmsg('Started a fresh canvas.')};
   function pxopen(tile){const was=PX.editId;PX.from=pageCur;open('#mp',1);$('#pxresult').hidden=true;
