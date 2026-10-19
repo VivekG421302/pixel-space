@@ -20,6 +20,8 @@ export function initApp() {
   const MODES={pomo:{n:'POMODORO',f:25,b:5,c:['#78c850','#68b840','#48a030']},r52:{n:'52/17',f:52,b:17,c:['#68b8e8','#58a8d8','#3878c8']},u90:{n:'90-MIN',f:90,b:20,c:['#a890d0','#9880c0','#6850a0']},tbx:{n:'TIMEBOX',f:60,b:10,c:['#f8a050','#e89040','#d06820']},cus:{n:'CUSTOM',f:30,b:10,c:['#b8b8a8','#a8a898','#707868']}};
   const DK={play:' ',reset:'r',skip:'s',mode:'m',task:'n',tabs:'t',sound:'x',menu:',',garden:'g',banner:'b',dark:'d'};
   let S=Object.assign({mode:'pomo',snd:true,vol:60,pet:'cat3',dur:{},tasks:[],custom:null,banner:'default',cover:null,kb:true,auto:false,keys:{},theme:'leaf',scheme:'light',a11y:{},talk:{}},LS('focusquest')||{},{cover:LS('fq_cover'),custom:LS('fq_custom')});{const sk=S.keys||{};S.keys={...DK,...sk};if(!sk.menu&&sk.settings)S.keys.menu=sk.settings;delete S.keys.settings;delete S.keys.about;if(S.theme==='night'){S.theme='leaf';S.scheme='dark'}S.a11y={font:'pixel',text:'normal',contrast:'normal',motion:'auto',...S.a11y};S.talk={on:true,mode:'both',...S.talk}}
+  /* saved data can come from older versions or be damaged: anything with the wrong shape becomes the default, so start-up never stops half way */
+  {const obj=v=>v&&typeof v==='object'&&!Array.isArray(v);if(!obj(S.dur))S.dur={};if(!obj(S.keys))S.keys={...DK};if(!obj(S.a11y))S.a11y={font:'pixel',text:'normal',contrast:'normal',motion:'auto'};if(!obj(S.talk))S.talk={on:true,mode:'both'};if(!Array.isArray(S.tasks))S.tasks=[];if(typeof S.haptic!=='boolean')S.haptic=true}
   const save=()=>{const{cover,custom,...r}=S;SV('focusquest',r);SV('fq_custom',custom);return SV('fq_cover',cover)};
   const dur=m=>({f:S.dur[m]?.f??MODES[m].f,b:S.dur[m]?.b??MODES[m].b});
   let phase='focus',left=dur(S.mode).f*60,run=false,endAt=0,tick;
@@ -388,7 +390,7 @@ export function initApp() {
   BI.forEach(i=>{if(i.cat.startsWith('DUNGEON')){i.ui='DUNGEON';i.sec=i.cat==='DUNGEON PROPS'?(i.fr>1?'DOORS, LEVER & CHEST':'OBJECTS'):DSEC[i.cat]}else i.ui=i.cat});
   const cats=()=>{const s=[...new Set(BI.map(i=>i.ui))];CT.forEach(t=>{if(!s.includes(t.cat))s.push(t.cat)});return s};
   document.documentElement.style.setProperty('--atl',`url(${ATLAS})`);
-  let gsT,gq=false;const GM=Object.assign({created:null,updated:null},LS('fq_garden_meta')||{});
+  let gsT,gq=false;const GM=Object.assign({created:null,updated:null},(v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{})(LS('fq_garden_meta')));
   const gsave=()=>{clearTimeout(gsT);const now=Date.now();GM.updated=now;if(!GM.created)GM.created=now;gsT=setTimeout(()=>{SV('fq_garden',[...G.cells].map(([k,a])=>[k,...a]));SV('fq_garden_meta',GM);dtoChanged('garden changed')},400)};
   const gcv=$('#gc'),gx=gcv.getContext('2d'),gd=()=>{if(!gq){gq=true;requestAnimationFrame(gdraw)}};
   AI.onload=gd;AI.src=ATLAS;
@@ -526,7 +528,7 @@ export function initApp() {
   $('#bsl').onclick=$('#bsl2').onclick=()=>{click();open('#msl',1);if(SL.raw)slDraw()};
   /* ---- pixel creator: any canvas size, a docked palette, optional faint reference image ---- */
   const hexOf=a=>'#'+a.slice(0,3).map(v=>Math.round(v).toString(16).padStart(2,'0')).join(''),rgbOf=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
-  const PX={w:32,h:32,z:12,zmax:32,cv:mk(32,32),tool:'pencil',col:'#383838',pal:LS('fq_pix_pal')||['#383838','#f8f8f8','#78c850','#48a030','#e84860','#f8d030','#48c8f8','#a0623c'],hist:[],redo:[],grid:true,bs:1,fill:false,trim:false,ref:null,refOp:.35,refShow:true,rc:null,pv:null,st:null,editId:null,init:false,layer:'draw',drawShow:true,pan:null,over:false,step:2,started:false,refit:false,cpend:false};
+  const PX={w:32,h:32,z:12,zmax:32,cv:mk(32,32),tool:'pencil',col:'#383838',pal:(()=>{const d=['#383838','#f8f8f8','#78c850','#48a030','#e84860','#f8d030','#48c8f8','#a0623c'],p=LS('fq_pix_pal');const ok=Array.isArray(p)?p.filter(c=>typeof c==='string'&&/^#[0-9a-f]{6}$/i.test(c)):[];return ok.length?ok:d})(),hist:[],redo:[],grid:true,bs:1,fill:false,trim:false,ref:null,refOp:.35,refShow:true,rc:null,pv:null,st:null,editId:null,init:false,layer:'draw',drawShow:true,pan:null,over:false,step:2,started:false,refit:false,cpend:false};
   const pxctx=()=>PX.cv.getContext('2d',{willReadFrequently:true}),pxmsg=m=>{$('#pxmsg').textContent=m;const t=$('#pxtoast');t.textContent=m;t.classList.add('on');clearTimeout(pxmsg.t);pxmsg.t=setTimeout(()=>t.classList.remove('on'),2600)},pxsave=()=>SV('fq_pix_pal',PX.pal),inb=(x,y)=>x>=0&&y>=0&&x<PX.w&&y<PX.h;
   let pxq=false,pxt;const pxd=()=>{if(!pxq){pxq=true;requestAnimationFrame(pxdraw)}};
   const pxdraft=()=>{if(PX.editId)return;clearTimeout(pxt);pxt=setTimeout(()=>SV('fq_pix_draft',{w:PX.w,h:PX.h,png:PX.cv.toDataURL()}),700)};
