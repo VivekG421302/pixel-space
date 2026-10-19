@@ -575,7 +575,7 @@ export function initApp() {
    if(s.k==='ref'){if(s.r){PX.ref.x=s.r.x+(e.clientX-s.r.sx)/PX.z;PX.ref.y=s.r.y+(e.clientY-s.r.sy)/PX.z;PX.rc=null;pxd()}return}
    if(s.k==='pencil'||s.k==='eraser'){pxline(s.last,p,(x,y)=>pxdot(pxctx(),x,y,s.k==='eraser'));s.last=p;pxd()}
    else{PX.pv=mk(PX.w,PX.h);pxshape(PX.pv.getContext('2d'),s.k,s.p,p);pxd()}});
-  const pxlift=e=>{pxtp.delete(e.pointerId);if(pxtp.size<2)PX.gest=null};
+  const pxlift=e=>{pxtp.delete(e.pointerId);if(pxtp.size<2)PX.gest=null;try{if(pxc.hasPointerCapture(e.pointerId))pxc.releasePointerCapture(e.pointerId)}catch(x){}};
   const pxend=e=>{pxlift(e);if(PX.pan){PX.pan=null;return}const s=PX.st;if(!s)return;PX.st=null;if(s.defer){const p=pxpt(e);if(s.k==='pick')pxpick(p);else{pxfill(p[0],p[1]);pxd();pxdraft()}return}if(s.k==='line'||s.k==='rect'){const p=pxpt(e);pxsnap();pxshape(pxctx(),s.k,s.p,p);PX.pv=null}if(s.k!=='ref')pxdraft();pxd()};
   pxc.addEventListener('pointerup',pxend);pxc.addEventListener('pointercancel',e=>{pxlift(e);PX.pan=null;PX.st=null;PX.pv=null;pxd()});
   $('#pxpal').onclick=e=>{const b=e.target.closest('[data-c]');if(b){click();PX.col=b.dataset.c;pxpal()}};
@@ -693,9 +693,9 @@ export function initApp() {
    document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const el=near(e);if(el)show(el)});
    document.addEventListener('pointerout',e=>{if(near(e))off()});
    document.addEventListener('focusin',e=>{const el=near(e);if(el&&e.target.matches(':focus-visible'))show(el)});document.addEventListener('focusout',off);
-   document.addEventListener('pointerdown',e=>{off();clearTimeout(lp);if(e.pointerType!=='touch')return;const el=near(e);if(!el)return;lp=setTimeout(()=>{el.dataset.held='1';show(el);hideT=setTimeout(off,1800)},420)});
+   document.addEventListener('pointerdown',e=>{off();clearTimeout(lp);if(e.pointerType!=='touch')return;const el=near(e);if(!el)return;lp=setTimeout(()=>{el.dataset.held=String(Date.now());show(el);hideT=setTimeout(off,1800)},420)});
    const stop=()=>clearTimeout(lp);document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop);document.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&Math.abs(e.movementX||0)+Math.abs(e.movementY||0)>2)stop()});
-   document.addEventListener('click',e=>{const el=near(e);if(el&&el.dataset.held){delete el.dataset.held;e.preventDefault();e.stopImmediatePropagation()}},true);  // a long press only shows the name
+   document.addEventListener('click',e=>{const el=near(e);if(el&&el.dataset.held){const fresh=Date.now()-(+el.dataset.held)<900;delete el.dataset.held;if(fresh){e.preventDefault();e.stopImmediatePropagation()}}},true);  // a long press only shows the name; the flag expires so it can never swallow a later tap
    document.addEventListener('contextmenu',e=>{if(near(e))e.preventDefault()})}
   addEventListener('keydown',e=>{if($('#mg').classList.contains('open')&&e.key===' '&&!typing(e.target)){G.space=true;e.preventDefault()}});addEventListener('keyup',e=>{if(e.key===' ')G.space=false});
   /* ---- accessibility settings: font, text size, contrast, motion ---- */
