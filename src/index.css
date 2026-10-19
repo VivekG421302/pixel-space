@@ -381,3 +381,8 @@ input[aria-invalid=true]{border-color:#b3261e;outline:2px solid #b3261e}
  .pxtoast,#tip{border:2px solid CanvasText}
  .pxview,.pxstage,#gview{border:1px solid CanvasText}
 }
+
+/* error banner (src/errors.js) */
+#errbar{position:fixed;left:8px;right:8px;bottom:8px;z-index:500;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;background:#16181f;color:#fff;border:3px solid #ff9b93;border-radius:6px;font-size:calc(10px*var(--ts));line-height:1.5}
+#errbar[hidden]{display:none}.errmsg{flex:1 1 240px;min-width:0;word-break:break-word}.errbtns{display:flex;flex-wrap:wrap;gap:6px}
+#errbar .gb[hidden]{display:none}

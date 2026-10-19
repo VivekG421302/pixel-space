@@ -12,13 +12,19 @@ import TileManagerModal from './components/TileManagerModal';
 import SheetImportModal from './components/SheetImportModal';
 import PixelCreatorModal from './components/PixelCreatorModal';
 import { initApp } from './engine/app';
+import { showError } from './errors.js';
 import { AuthProvider } from './auth/AuthContext';
 import AuthModal from './auth/AuthModal';
 
 export default function App() {
   // Attach the interactive engine once the markup is in the DOM.
   useEffect(() => {
-    initApp();
+    try {
+      initApp();
+    } catch (e) {
+      // keep the page on screen and say what happened instead of leaving dead buttons
+      showError(e.message, e.stack, { fatal: true });
+    }
   }, []);
 
   return (
